@@ -22,7 +22,12 @@ La aplicación se encuentra operativa en la siguiente URL:
 * `.env.example`: Plantilla de variables de entorno.
 * `.gitignore`: Archivos excluidos del control de versiones.
 
+Imagen
+<img width="3334" height="491" alt="imagen" src="https://github.com/user-attachments/assets/23b19361-2c9e-45b6-8381-082d8635a0d6" />
+
+
 ## 🧪 Decisiones Técnicas
+
 1. **Enfoque en Contenedores:** Se utilizó Docker para garantizar la portabilidad de la solución de IA.
 2. **Automatización:** Se implementó un flujo en GitHub Actions que valida el código en cada `push`.
 3. **Escalabilidad:** Se eligió Render por su facilidad para escalar servicios web basados en contenedores.
