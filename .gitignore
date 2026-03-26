@@ -1,2 +1,20 @@
+# Variables de entorno (contienen credenciales)
 .env
-.example
+
+
+# Dataset fuente (demasiado pesado para git)
+data/
+
+# Modelos entrenados serializados
+models/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# IDEs
+.vscode/
+.idea/

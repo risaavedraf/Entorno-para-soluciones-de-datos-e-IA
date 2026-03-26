@@ -18,4 +18,4 @@ jobs:
           pip install fastapi uvicorn
       - name: Test (Basic check)
         run: |
-          python -c "import main; print('Importación exitosa')"
+          python -c "from app import main; print('Importación exitosa')"

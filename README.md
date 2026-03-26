@@ -1,39 +1,97 @@
-# Entorno Técnico para Soluciones de Datos e IA
-**Asignatura:** Gestión de Datos para IA (ITY1101)  
+# 🏠 Pipeline de Predicción de Precios Inmobiliarios
+**Asignatura:** Gestión de Datos para IA (ITY1101) — DuocUC  
+**Dataset:** Ames Housing Dataset (2930 propiedades, 82 variables)
 
 ## 📝 Descripción
-Este proyecto consiste en la configuración de un entorno técnico completo en la nube para el desarrollo de soluciones de IA. Se integra el control de versiones, la contenerización con Docker, automatización CI/CD y despliegue continuo para asegurar escalabilidad y trazabilidad.
+Pipeline de gestión de datos e Inteligencia Artificial para la predicción del valor de mercado de propiedades inmobiliarias. El proyecto abarca desde la ingesta de datos desde un CSV público, su almacenamiento en PostgreSQL, hasta el entrenamiento de un modelo de Regresión y su exposición através de una API REST.
 
-## 🛠️ Herramientas Utilizadas
-* **GitHub:** Control de versiones y repositorio central.
-* **Docker:** Contenerización de la aplicación para asegurar que funcione en cualquier entorno.
-* **GitHub Actions:** Pipeline de CI/CD para automatización de pruebas e integración.
-* **Render:** Plataforma de despliegue en la nube para la API.
-* **FastAPI:** Framework de Python utilizado para la aplicación simple.
-
-## 🚀 Despliegue
-La aplicación se encuentra operativa en la siguiente URL:
-> **[[TU_URL_AQUÍ](https://entorno-para-soluciones-de-datos-e-ia.onrender.com/)]**
+## 🏗️ Arquitectura
+```
+CSV (Ames Housing)
+      │
+      ▼ scripts/ingesta.py
+      │
+ [PostgreSQL]  ◄── database/schema.sql
+      │
+      ▼ scripts/entrenamiento.py
+      │
+ [Modelo .joblib]
+      │
+      ▼ app/main.py (FastAPI)
+      │
+   [Render]
+```
 
 ## 📂 Estructura del Proyecto
-* `app/`: Contiene la lógica de la API (`main.py`).
-* `Dockerfile`: Instrucciones para la imagen de contenedor.
-* `.github/workflows/`: Configuración de la automatización CI/CD.
-* `.env.example`: Plantilla de variables de entorno.
-* `.gitignore`: Archivos excluidos del control de versiones.
+```
+/
+├── app/
+│   └── main.py              # API FastAPI (endpoints /predict y /health)
+├── data/
+│   └── AmesHousing.csv      # Dataset fuente (ignorado en git)
+├── database/
+│   └── schema.sql           # Esquema y vistas de PostgreSQL
+├── docs/
+│   ├── planificacion.md     # Planificación PMBOK del proyecto
+│   └── diseno_tecnico.md    # Arquitectura y diseño técnico
+├── models/                  # Modelo entrenado serializado (.joblib)
+├── scripts/
+│   ├── ingesta.py           # Carga CSV → PostgreSQL
+│   ├── limpieza.py          # (Próximamente) Transformación de datos
+│   └── entrenamiento.py     # (Próximamente) Entrenamiento del modelo
+├── .env.example             # Plantilla de variables de entorno
+├── .gitignore
+├── dockerfile               # Imagen Docker para Render
+├── requirements.txt         # Dependencias Python
+└── README.md
+```
 
-Imagen
-<img width="3334" height="491" alt="imagen" src="https://github.com/user-attachments/assets/23b19361-2c9e-45b6-8381-082d8635a0d6" />
+## 🛠️ Stack Tecnológico
+| Categoría | Tecnología |
+|---|---|
+| Lenguaje | Python 3.9+ |
+| API | FastAPI / Uvicorn |
+| Base de Datos | PostgreSQL + SQLAlchemy |
+| Machine Learning | Scikit-Learn, Pandas, NumPy |
+| Contenerización | Docker |
+| CI/CD | GitHub Actions |
+| Despliegue | Render |
 
+## 🚀 Cómo ejecutar localmente
+### Prerrequisitos
+- Python 3.9+
+- PostgreSQL corriendo (local o Docker)
 
-## 🧪 Decisiones Técnicas
+### 1. Clonar y configurar entorno
+```bash
+git clone https://github.com/TU_USUARIO/TU_REPO.git
+cd TU_REPO
+pip install -r requirements.txt
+```
 
-1. **Enfoque en Contenedores:** Se utilizó Docker para garantizar la portabilidad de la solución de IA.
-2. **Automatización:** Se implementó un flujo en GitHub Actions que valida el código en cada `push`.
-3. **Escalabilidad:** Se eligió Render por su facilidad para escalar servicios web basados en contenedores.
+### 2. Configurar variables de entorno
+```bash
+cp .env.example .env
+# Editar .env con los datos de tu base de datos local
+```
 
-## 🔍 Alternativas Investigadas
-Como parte del trabajo autónomo, se identificaron las siguientes alternativas para el despliegue:
-* **Vercel / Railway:** Para despliegues rápidos de aplicaciones web.
-* **Fly.io:** Enfocado en despliegues globales cerca del usuario.
-* **Supabase:** Excelente alternativa si el proyecto requiere una base de datos gestionada.
+### 3. Ejecutar ingesta de datos
+```bash
+python scripts/ingesta.py
+```
+
+### 4. Levantar la API
+```bash
+uvicorn app.main:app --reload
+```
+
+## 🌐 Despliegue en Render
+La aplicación se despliega automáticamente en cada push a `main` mediante el Dockerfile.  
+**URL:** [https://entorno-para-soluciones-de-datos-e-ia.onrender.com/](https://entorno-para-soluciones-de-datos-e-ia.onrender.com/)
+
+## 🧪 CI/CD
+Cada push a `main` ejecuta el pipeline de GitHub Actions que valida la instalación de dependencias e importación de la app.
+
+## 📚 Documentación
+- [Planificación PMBOK](docs/planificacion.md)
+- [Diseño Técnico](docs/diseno_tecnico.md)

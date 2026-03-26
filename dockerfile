@@ -1,15 +1,17 @@
-# Usamos una imagen ligera de Python
 FROM python:3.9-slim
 
-# Directorio de trabajo dentro del contenedor
+# Instalar dependencias del sistema necesarias para psycopg2
+RUN apt-get update && apt-get install -y \
+    libpq-dev \
+    gcc \
+    && rm -rf /var/lib/apt/lists/*
+
 WORKDIR /app
 
-# Copiamos los archivos de requerimientos e instalamos
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copiamos el resto del código
 COPY . .
 
-# Comando para ejecutar la API
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "80"]
+# Render usa la variable PORT. Si no existe, usamos 8000.
+CMD uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}
