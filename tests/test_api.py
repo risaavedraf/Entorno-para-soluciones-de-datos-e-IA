@@ -8,11 +8,11 @@ Uso:
     pytest tests/ -v
 """
 
-import pytest
 from unittest.mock import MagicMock, patch
-from fastapi.testclient import TestClient
-import pandas as pd
+
 import numpy as np
+import pytest
+from fastapi.testclient import TestClient
 
 
 # ────────────────────────────────────────────────────

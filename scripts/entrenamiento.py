@@ -8,10 +8,10 @@ Uso:
     python scripts/entrenamiento.py
 """
 
-import json
 import os
 
 import joblib
+import json
 import numpy as np
 import pandas as pd
 from dotenv import load_dotenv
@@ -181,7 +181,6 @@ def guardar_mejor_modelo(resultados: dict) -> str:
         'features': list(resultados[mejor_nombre]['pipeline'].feature_names_in_) if hasattr(resultados[mejor_nombre]['pipeline'], 'feature_names_in_') else []
     }
 
-    import json
     metadata_path = os.path.join(MODELS_DIR, "metadata.json")
     with open(metadata_path, 'w') as f:
         json.dump(metadata, f, indent=2)
