@@ -35,9 +35,8 @@ __pycache__/
 .venv/
 venv/
 
-# Modelos (se entrenan localmente)
-models/
-!models/.gitkeep
+# Modelos - se NECESITAN en el build de Docker
+# models/
 
 # Docker
 docker-compose*.yml
