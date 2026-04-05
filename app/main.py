@@ -67,7 +67,7 @@ app = FastAPI(
     title="🏠 API Predicción Precios Inmobiliarios",
     description="Predice el valor de mercado de propiedades en Ames, Iowa usando Random Forest",
     version="1.0.0",
-    lifespan=lifespan
+    lifespan=lifespan,
 )
 
 # Montar archivos estáticos (frontend)
@@ -80,6 +80,7 @@ if STATIC_DIR.exists():
 # ────────────────────────────────────────────────────
 class PropiedadInput(BaseModel):
     """Input para predicción de precio de propiedad."""
+
     overall_qual: int = Field(..., ge=1, le=10, description="Calidad general (1-10)")
     gr_liv_area: int = Field(..., gt=0, description="Superficie habitable (pies²)")
     total_bsmt_sf: float = Field(0, ge=0, description="Superficie sótano (pies²)")
@@ -102,7 +103,7 @@ class PropiedadInput(BaseModel):
                     "garage_cars": 2,
                     "garage_area": 500,
                     "lot_frontage": 60,
-                    "neighborhood": "NAmes"
+                    "neighborhood": "NAmes",
                 }
             ]
         }
@@ -111,6 +112,7 @@ class PropiedadInput(BaseModel):
 
 class PrediccionOutput(BaseModel):
     """Output de la predicción."""
+
     precio_predicho: float = Field(..., description="Precio estimado en USD")
     precio_formateado: str = Field(..., description="Precio formateado")
     modelo_usado: str = Field(..., description="Nombre del modelo")
@@ -141,8 +143,8 @@ def api_info():
             "predict": "POST /predict",
             "health": "GET /health",
             "info": "GET /model/info",
-            "docs": "GET /docs"
-        }
+            "docs": "GET /docs",
+        },
     }
 
 
@@ -150,17 +152,16 @@ def api_info():
 def health_check():
     """Health check para Render y monitoreo."""
     modelo_cargado = modelo is not None
-    return {
-        "status": "ok" if modelo_cargado else "degraded",
-        "modelo_cargado": modelo_cargado
-    }
+    return {"status": "ok" if modelo_cargado else "degraded", "modelo_cargado": modelo_cargado}
 
 
 @app.get("/model/info")
 def model_info():
     """Devuelve información del modelo entrenado."""
     if not metadata:
-        raise HTTPException(status_code=404, detail="Modelo no encontrado. Ejecutá: python scripts/entrenamiento.py")
+        raise HTTPException(
+            status_code=404, detail="Modelo no encontrado. Ejecutá: python scripts/entrenamiento.py"
+        )
     return metadata
 
 
@@ -173,40 +174,39 @@ def predict(propiedad: PropiedadInput):
     """
     if modelo is None:
         raise HTTPException(
-            status_code=503,
-            detail="Modelo no cargado. Ejecutá: python scripts/entrenamiento.py"
+            status_code=503, detail="Modelo no cargado. Ejecutá: python scripts/entrenamiento.py"
         )
 
     try:
         # Convertir input a DataFrame
         datos = {
-            'overall_qual': [propiedad.overall_qual],
-            'gr_liv_area': [propiedad.gr_liv_area],
-            'total_bsmt_sf': [propiedad.total_bsmt_sf],
-            'full_bath': [propiedad.full_bath],
-            'bedroom_abvgr': [propiedad.bedroom_abvgr],
-            'garage_cars': [propiedad.garage_cars],
-            'garage_area': [propiedad.garage_area],
-            'lot_frontage': [propiedad.lot_frontage],
+            "overall_qual": [propiedad.overall_qual],
+            "gr_liv_area": [propiedad.gr_liv_area],
+            "total_bsmt_sf": [propiedad.total_bsmt_sf],
+            "full_bath": [propiedad.full_bath],
+            "bedroom_abvgr": [propiedad.bedroom_abvgr],
+            "garage_cars": [propiedad.garage_cars],
+            "garage_area": [propiedad.garage_area],
+            "lot_frontage": [propiedad.lot_frontage],
         }
 
         df = pd.DataFrame(datos)
 
         # Feature engineering (igual que en entrenamiento.py)
-        df['ratio_area_banos'] = df['gr_liv_area'] / (df['full_bath'] + 1)
-        df['area_por_habitacion'] = df['gr_liv_area'] / (df['bedroom_abvgr'] + 1)
-        df['tiene_sotano'] = (df['total_bsmt_sf'] > 0).astype(int)
-        df['tiene_garage'] = (df['garage_cars'] > 0).astype(int)
+        df["ratio_area_banos"] = df["gr_liv_area"] / (df["full_bath"] + 1)
+        df["area_por_habitacion"] = df["gr_liv_area"] / (df["bedroom_abvgr"] + 1)
+        df["tiene_sotano"] = (df["total_bsmt_sf"] > 0).astype(int)
+        df["tiene_garage"] = (df["garage_cars"] > 0).astype(int)
 
         # One-Hot Encoding para neighborhood
         # Necesitamos TODAS las columnas que el modelo espera
         # Las columnas nbh_XXX se crean con get_dummies
-        df['neighborhood'] = propiedad.neighborhood
-        df = pd.get_dummies(df, columns=['neighborhood'], prefix='nbh', drop_first=True)
+        df["neighborhood"] = propiedad.neighborhood
+        df = pd.get_dummies(df, columns=["neighborhood"], prefix="nbh", drop_first=True)
 
         # Asegurar que tenemos TODAS las columnas que el modelo espera
         # Las que faltan se llenan con 0 (no pertenece a ese barrio)
-        if hasattr(modelo, 'feature_names_in_'):
+        if hasattr(modelo, "feature_names_in_"):
             for col in modelo.feature_names_in_:
                 if col not in df.columns:
                     df[col] = 0
@@ -217,14 +217,14 @@ def predict(propiedad: PropiedadInput):
         precio = modelo.predict(df)[0]
 
         # Formatear respuesta
-        r2 = metadata['r2'] if metadata else 0.0
-        modelo_nombre = metadata['modelo'] if metadata else "Random Forest"
+        r2 = metadata["r2"] if metadata else 0.0
+        modelo_nombre = metadata["modelo"] if metadata else "Random Forest"
 
         return PrediccionOutput(
             precio_predicho=round(float(precio), 2),
             precio_formateado=f"${precio:,.0f} USD",
             modelo_usado=modelo_nombre,
-            confianza_r2=r2
+            confianza_r2=r2,
         )
 
     except Exception as e:

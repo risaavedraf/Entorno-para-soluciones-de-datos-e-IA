@@ -20,7 +20,7 @@ from sqlalchemy import create_engine, text
 load_dotenv()  # Lee el archivo .env automáticamente
 
 DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/housing_db")
-DATA_PATH    = os.path.join(os.path.dirname(__file__), "..", "database", "AmesHousing.csv")
+DATA_PATH = os.path.join(os.path.dirname(__file__), "..", "database", "AmesHousing.csv")
 
 
 # ────────────────────────────────────────────────────
@@ -33,10 +33,7 @@ def cargar_csv(ruta: str) -> pd.DataFrame:
 
     # Limpiar nombres de columna: minúsculas, sin espacios ni caracteres especiales
     df.columns = (
-        df.columns
-        .str.lower()
-        .str.replace(" ", "_", regex=False)
-        .str.replace("/", "_", regex=False)
+        df.columns.str.lower().str.replace(" ", "_", regex=False).str.replace("/", "_", regex=False)
     )
 
     print(f"✅ Dataset cargado: {df.shape[0]} filas, {df.shape[1]} columnas.")
@@ -47,22 +44,49 @@ def cargar_csv(ruta: str) -> pd.DataFrame:
 # 3. SELECCIÓN DE COLUMNAS RELEVANTES
 # ────────────────────────────────────────────────────
 COLUMNAS_SELECCIONADAS = [
-    "order", "pid",
-    "ms_subclass", "ms_zoning", "lot_frontage", "lot_area", "street",
-    "lot_shape", "neighborhood", "overall_qual", "overall_cond",
-    "year_built", "year_remod_add", "house_style", "bldg_type",
-    "gr_liv_area", "total_bsmt_sf", "1st_flr_sf", "2nd_flr_sf",
-    "full_bath", "half_bath", "bedroom_abvgr", "kitchen_abvgr", "totrms_abvgrd",
-    "garage_type", "garage_yr_blt", "garage_cars", "garage_area",
-    "wood_deck_sf", "open_porch_sf", "pool_area",
-    "mo_sold", "yr_sold", "sale_type", "sale_condition", "saleprice"
+    "order",
+    "pid",
+    "ms_subclass",
+    "ms_zoning",
+    "lot_frontage",
+    "lot_area",
+    "street",
+    "lot_shape",
+    "neighborhood",
+    "overall_qual",
+    "overall_cond",
+    "year_built",
+    "year_remod_add",
+    "house_style",
+    "bldg_type",
+    "gr_liv_area",
+    "total_bsmt_sf",
+    "1st_flr_sf",
+    "2nd_flr_sf",
+    "full_bath",
+    "half_bath",
+    "bedroom_abvgr",
+    "kitchen_abvgr",
+    "totrms_abvgrd",
+    "garage_type",
+    "garage_yr_blt",
+    "garage_cars",
+    "garage_area",
+    "wood_deck_sf",
+    "open_porch_sf",
+    "pool_area",
+    "mo_sold",
+    "yr_sold",
+    "sale_type",
+    "sale_condition",
+    "saleprice",
 ]
 
 # Mapeo para alinear nombres del CSV con el schema.sql
 RENOMBRAR = {
-    "order":        "order_id",
-    "1st_flr_sf":   "first_flr_sf",
-    "2nd_flr_sf":   "second_flr_sf",
+    "order": "order_id",
+    "1st_flr_sf": "first_flr_sf",
+    "2nd_flr_sf": "second_flr_sf",
 }
 
 
@@ -89,7 +113,7 @@ def cargar_a_postgres(df: pd.DataFrame, engine) -> None:
         name="properties_raw",
         con=engine,
         if_exists="append",  # El schema.sql ya recreó la tabla limpia
-        index=False
+        index=False,
     )
     print(f"✅ {len(df)} registros cargados exitosamente en PostgreSQL.")
 

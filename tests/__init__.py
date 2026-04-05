@@ -1,1 +1,1 @@
-﻿# Tests para la API de Prediccion Inmobiliaria
+# Tests para la API de Prediccion Inmobiliaria

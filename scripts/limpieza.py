@@ -44,21 +44,23 @@ def crear_features(df: pd.DataFrame) -> pd.DataFrame:
     print("🔧 Creando features derivadas...")
 
     # Antigüedad de la casa al momento de venta
-    df['antiguedad'] = df['yr_sold'] - df['year_built']
+    df["antiguedad"] = df["yr_sold"] - df["year_built"]
     # Nota: yr_sold y year_built no están en la vista limpia
     # Las agregamos desde properties_raw si es necesario
 
     # Ratio superficie habitable / baños
-    df['ratio_area_banos'] = df['gr_liv_area'] / (df['full_bath'] + 1)  # +1 para evitar división por 0
+    df["ratio_area_banos"] = df["gr_liv_area"] / (
+        df["full_bath"] + 1
+    )  # +1 para evitar división por 0
 
     # Superficie por habitación
-    df['area_por_habitacion'] = df['gr_liv_area'] / (df['bedroom_abvgr'] + 1)
+    df["area_por_habitacion"] = df["gr_liv_area"] / (df["bedroom_abvgr"] + 1)
 
     # Flag: tiene sótano
-    df['tiene_sotano'] = (df['total_bsmt_sf'] > 0).astype(int)
+    df["tiene_sotano"] = (df["total_bsmt_sf"] > 0).astype(int)
 
     # Flag: tiene garage
-    df['tiene_garage'] = (df['garage_cars'] > 0).astype(int)
+    df["tiene_garage"] = (df["garage_cars"] > 0).astype(int)
 
     print(f"✅ Features creadas: {df.shape[1]} columnas totales")
     return df
@@ -76,7 +78,7 @@ def encode_categoricas(df: pd.DataFrame) -> pd.DataFrame:
 
     # One-Hot Encoding para neighborhood (muchas categorías)
     # Usamos get_dummies de pandas — simple y efectivo
-    df_encoded = pd.get_dummies(df, columns=['neighborhood'], prefix='nbh', drop_first=True)
+    df_encoded = pd.get_dummies(df, columns=["neighborhood"], prefix="nbh", drop_first=True)
 
     print(f"✅ Encoding completo: {df_encoded.shape[1]} columnas")
     return df_encoded
@@ -93,10 +95,10 @@ def separar_xy(df: pd.DataFrame) -> tuple:
     print("✂️  Separando features (X) y target (y)...")
 
     # Columnas que NO son features
-    cols_excluir = ['order_id', 'saleprice']
+    cols_excluir = ["order_id", "saleprice"]
 
     X = df.drop(columns=[c for c in cols_excluir if c in df.columns])
-    y = df['saleprice']
+    y = df["saleprice"]
 
     print(f"✅ X: {X.shape[1]} features, y: {y.name} (target)")
     return X, y

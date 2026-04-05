@@ -28,15 +28,42 @@ def mock_model():
 
     # Simular feature_names_in_ (columnas que espera el modelo)
     mock.feature_names_in_ = [
-        'overall_qual', 'gr_liv_area', 'total_bsmt_sf', 'full_bath',
-        'bedroom_abvgr', 'garage_cars', 'garage_area', 'lot_frontage',
-        'ratio_area_banos', 'area_por_habitacion', 'tiene_sotano', 'tiene_garage',
-        'nbh_Blueste', 'nbh_BrDale', 'nbh_BrkSide', 'nbh_ClearCr',
-        'nbh_CollgCr', 'nbh_Crawfor', 'nbh_Edwards', 'nbh_Gilbert',
-        'nbh_IDOTRR', 'nbh_MeadowV', 'nbh_Mitchel', 'nbh_NAmes',
-        'nbh_NPkVill', 'nbh_NWAmes', 'nbh_NoRidge', 'nbh_NridgHt',
-        'nbh_OldTown', 'nbh_SWISU', 'nbh_Sawyer', 'nbh_SawyerW',
-        'nbh_Somerst', 'nbh_StoneBr', 'nbh_Timber', 'nbh_Veenker'
+        "overall_qual",
+        "gr_liv_area",
+        "total_bsmt_sf",
+        "full_bath",
+        "bedroom_abvgr",
+        "garage_cars",
+        "garage_area",
+        "lot_frontage",
+        "ratio_area_banos",
+        "area_por_habitacion",
+        "tiene_sotano",
+        "tiene_garage",
+        "nbh_Blueste",
+        "nbh_BrDale",
+        "nbh_BrkSide",
+        "nbh_ClearCr",
+        "nbh_CollgCr",
+        "nbh_Crawfor",
+        "nbh_Edwards",
+        "nbh_Gilbert",
+        "nbh_IDOTRR",
+        "nbh_MeadowV",
+        "nbh_Mitchel",
+        "nbh_NAmes",
+        "nbh_NPkVill",
+        "nbh_NWAmes",
+        "nbh_NoRidge",
+        "nbh_NridgHt",
+        "nbh_OldTown",
+        "nbh_SWISU",
+        "nbh_Sawyer",
+        "nbh_SawyerW",
+        "nbh_Somerst",
+        "nbh_StoneBr",
+        "nbh_Timber",
+        "nbh_Veenker",
     ]
 
     return mock
@@ -45,12 +72,7 @@ def mock_model():
 @pytest.fixture
 def mock_metadata():
     """Crea un mock de la metadata del modelo."""
-    return {
-        'modelo': 'Random Forest',
-        'r2': 0.9649,
-        'mae': 9210.0,
-        'rmse': 13808.0
-    }
+    return {"modelo": "Random Forest", "r2": 0.9649, "mae": 9210.0, "rmse": 13808.0}
 
 
 @pytest.fixture
@@ -59,9 +81,9 @@ def client(mock_model, mock_metadata):
     Crea un TestClient con el modelo mockeado.
     Esto aísla los tests del modelo real.
     """
-    with patch('app.main.modelo', mock_model), \
-         patch('app.main.metadata', mock_metadata):
+    with patch("app.main.modelo", mock_model), patch("app.main.metadata", mock_metadata):
         from app.main import app
+
         yield TestClient(app)
 
 
@@ -77,7 +99,7 @@ VALID_INPUT = {
     "garage_cars": 2,
     "garage_area": 500,
     "lot_frontage": 60,
-    "neighborhood": "NAmes"
+    "neighborhood": "NAmes",
 }
 
 
@@ -239,16 +261,18 @@ class TestDocs:
 class TestModelNotLoaded:
     def test_predict_returns_503_without_model(self):
         """POST /predict sin modelo cargado debe retornar 503."""
-        with patch('app.main.modelo', None):
+        with patch("app.main.modelo", None):
             from app.main import app
+
             test_client = TestClient(app)
             response = test_client.post("/predict", json=VALID_INPUT)
             assert response.status_code == 503
 
     def test_model_info_returns_404_without_model(self):
         """GET /model/info sin metadata debe retornar 404."""
-        with patch('app.main.metadata', None):
+        with patch("app.main.metadata", None):
             from app.main import app
+
             test_client = TestClient(app)
             response = test_client.get("/model/info")
             assert response.status_code == 404
