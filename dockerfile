@@ -23,6 +23,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copiar código de la aplicación
 COPY app/ app/
 COPY models/ models/
+COPY static/ static/
+COPY requirements.txt .
 
 # Cambiar al usuario no-root
 USER appuser
