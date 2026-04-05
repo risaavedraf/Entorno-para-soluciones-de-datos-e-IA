@@ -9,9 +9,10 @@ Uso:
 """
 
 import os
+
 import pandas as pd
-from sqlalchemy import create_engine, text
 from dotenv import load_dotenv
+from sqlalchemy import create_engine, text
 
 # ────────────────────────────────────────────────────
 # 1. CONFIGURACIÓN DE CONEXIÓN
@@ -73,7 +74,7 @@ def cargar_a_postgres(df: pd.DataFrame, engine) -> None:
     with engine.connect() as conn:
         print("🗑️  Ejecutando schema.sql (DROP + CREATE TABLE)...")
         schema_path = os.path.join(os.path.dirname(__file__), "..", "database", "schema.sql")
-        with open(schema_path, "r", encoding="utf-8") as f:
+        with open(schema_path, encoding="utf-8") as f:
             schema_sql = f.read()
         # Ejecutar cada statement del schema por separado
         for statement in schema_sql.split(";"):

@@ -9,7 +9,18 @@ line-length = 100
 # Target Python version
 target-version = "py310"
 
-# Reglas de linting a habilitar
+# Excluir carpetas
+exclude = [
+    ".git",
+    ".venv",
+    "venv",
+    "__pycache__",
+    "models/",
+    "data/",
+]
+
+# Reglas de linting (usando sección lint)
+[lint]
 select = [
     "E",      # pycodestyle errors
     "W",      # pycodestyle warnings
@@ -26,16 +37,9 @@ select = [
 ignore = [
     "E501",   # line too long (manejado por formatter)
     "B008",   # function call in default argument (FastAPI Depends)
-]
-
-# Excluir carpetas
-exclude = [
-    ".git",
-    ".venv",
-    "venv",
-    "__pycache__",
-    "models/",
-    "data/",
+    "N806",   # variable in function should be lowercase (X, y son estándar en ML)
+    "N803",   # argument name should be lowercase (X_train, X_test son estándar en ML)
+    "B904",   # raise within except (no es crítico para este proyecto)
 ]
 
 # Configuración de isort (orden de imports)

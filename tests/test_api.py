@@ -86,20 +86,25 @@ VALID_INPUT = {
 # ────────────────────────────────────────────────────
 class TestRoot:
     def test_root_returns_200(self, client):
-        """GET / debe retornar 200."""
+        """GET / debe retornar 200 (HTML o JSON)."""
         response = client.get("/")
         assert response.status_code == 200
 
-    def test_root_contains_mensaje(self, client):
-        """GET / debe contener el campo 'mensaje'."""
-        response = client.get("/")
+    def test_api_returns_200(self, client):
+        """GET /api debe retornar 200."""
+        response = client.get("/api")
+        assert response.status_code == 200
+
+    def test_api_contains_mensaje(self, client):
+        """GET /api debe contener el campo 'mensaje'."""
+        response = client.get("/api")
         data = response.json()
         assert "mensaje" in data
         assert "API" in data["mensaje"]
 
-    def test_root_contains_estado(self, client):
-        """GET / debe contener estado operativo."""
-        response = client.get("/")
+    def test_api_contains_estado(self, client):
+        """GET /api debe contener estado operativo."""
+        response = client.get("/api")
         data = response.json()
         assert data["estado"] == "operativo"
 

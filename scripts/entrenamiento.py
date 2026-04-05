@@ -8,23 +8,23 @@ Uso:
     python scripts/entrenamiento.py
 """
 
+import json
 import os
-import pandas as pd
+
+import joblib
 import numpy as np
-from sqlalchemy import create_engine
+import pandas as pd
 from dotenv import load_dotenv
+from sqlalchemy import create_engine
 
 # Scikit-Learn
-from sklearn.model_selection import train_test_split
-from sklearn.linear_model import LinearRegression
-from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
-from sklearn.preprocessing import StandardScaler
+from sklearn.ensemble import GradientBoostingRegressor, RandomForestRegressor
 from sklearn.impute import SimpleImputer
-from sklearn.pipeline import Pipeline
+from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
-
-# Serialización
-import joblib
+from sklearn.model_selection import train_test_split
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import StandardScaler
 
 # ────────────────────────────────────────────────────
 # 1. CONFIGURACIÓN
@@ -219,10 +219,10 @@ if __name__ == "__main__":
         print("\n" + "="*50)
         print("✅ ENTRENAMIENTO COMPLETADO")
         print("="*50)
-        print(f"\n🚀 Para usar el modelo, ejecutá:")
-        print(f"   uvicorn app.main:app --reload")
-        print(f"\n   POST /predict con JSON:")
-        print(f'   {{"overall_qual": 7, "gr_liv_area": 1500, ...}}')
+        print("\n🚀 Para usar el modelo, ejecutá:")
+        print("   uvicorn app.main:app --reload")
+        print("\n   POST /predict con JSON:")
+        print('   {"overall_qual": 7, "gr_liv_area": 1500, ...}')
 
     except Exception as e:
         print(f"❌ Error durante el entrenamiento: {e}")

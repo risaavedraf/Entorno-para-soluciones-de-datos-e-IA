@@ -9,10 +9,10 @@ Uso:
 """
 
 import os
+
 import pandas as pd
-import numpy as np
-from sqlalchemy import create_engine
 from dotenv import load_dotenv
+from sqlalchemy import create_engine
 
 # ────────────────────────────────────────────────────
 # 1. CONFIGURACIÓN
@@ -27,7 +27,7 @@ DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://postgres:postgres@localho
 def leer_datos_limpios(engine) -> pd.DataFrame:
     """Lee la vista vw_properties_clean de PostgreSQL."""
     query = "SELECT * FROM vw_properties_clean"
-    print(f"📥 Leyendo datos desde vw_properties_clean...")
+    print("📥 Leyendo datos desde vw_properties_clean...")
     df = pd.read_sql(query, engine)
     print(f"✅ Datos leídos: {df.shape[0]} filas, {df.shape[1]} columnas")
     return df

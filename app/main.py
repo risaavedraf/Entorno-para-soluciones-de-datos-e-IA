@@ -8,17 +8,16 @@ Uso:
     uvicorn app.main:app --reload
 """
 
-import os
 import json
+from contextlib import asynccontextmanager
+from pathlib import Path
+
 import joblib
 import pandas as pd
-from pathlib import Path
-from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException
-from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
-from typing import Optional
 
 # ────────────────────────────────────────────────────
 # 1. RUTAS Y CONFIGURACIÓN
@@ -52,7 +51,7 @@ async def lifespan(app: FastAPI):
         print(f"✅ Modelo cargado: {MODEL_PATH}")
 
     if METADATA_PATH.exists():
-        with open(METADATA_PATH, 'r') as f:
+        with open(METADATA_PATH) as f:
             metadata = json.load(f)
         print(f"📋 Metadata cargada: {metadata['modelo']} (R²={metadata['r2']:.4f})")
 
@@ -123,10 +122,17 @@ class PrediccionOutput(BaseModel):
 # ────────────────────────────────────────────────────
 @app.get("/")
 def read_root():
-    """Sirve el frontend HTML si existe, sino devuelve JSON."""
+    """Sirve el frontend HTML."""
     index_path = STATIC_DIR / "index.html"
     if index_path.exists():
         return FileResponse(str(index_path))
+    # Fallback si no hay HTML
+    return {"mensaje": "API de Predicción Inmobiliaria", "estado": "operativo"}
+
+
+@app.get("/api")
+def api_info():
+    """Devuelve info de la API en JSON."""
     return {
         "mensaje": "🏠 API de Predicción Inmobiliaria",
         "estado": "operativo",
@@ -222,4 +228,4 @@ def predict(propiedad: PropiedadInput):
         )
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error en predicción: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error en predicción: {e}") from e
