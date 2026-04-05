@@ -8,10 +8,10 @@ Uso:
     python scripts/entrenamiento.py
 """
 
+import json
 import os
 
 import joblib
-import json
 import numpy as np
 import pandas as pd
 from dotenv import load_dotenv
