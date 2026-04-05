@@ -19,7 +19,7 @@ from dotenv import load_dotenv
 load_dotenv()  # Lee el archivo .env automáticamente
 
 DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/housing_db")
-DATA_PATH    = os.path.join(os.path.dirname(__file__), "..", "data", "AmesHousing.csv")
+DATA_PATH    = os.path.join(os.path.dirname(__file__), "..", "database", "AmesHousing.csv")
 
 
 # ────────────────────────────────────────────────────
@@ -78,7 +78,8 @@ def cargar_a_postgres(df: pd.DataFrame, engine) -> None:
         # Ejecutar cada statement del schema por separado
         for statement in schema_sql.split(";"):
             stmt = statement.strip()
-            if stmt:
+            # Ignorar: vacíos, solo comentarios (-- ...), o solo espacios
+            if stmt and not stmt.startswith("--"):
                 conn.execute(text(stmt))
         conn.commit()
 

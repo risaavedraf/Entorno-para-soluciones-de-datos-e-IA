@@ -1,12 +1,16 @@
 # Variables de entorno (contienen credenciales)
 .env
 
-
 # Dataset fuente (demasiado pesado para git)
 data/
 
+# Datos procesados (se generan localmente)
+data/processed/
+
 # Modelos entrenados serializados
-models/
+# NOTA: Se suben al repo para que Render los tenga disponibles
+# models/
+models/*.gitkeep
 
 # Python
 __pycache__/
@@ -15,6 +19,13 @@ __pycache__/
 .venv/
 venv/
 
+# Testing
+.pytest_cache/
+htmlcov/
+
 # IDEs
 .vscode/
 .idea/
+
+# Docker
+docker-compose.override.yml

@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🏠 Predictor de Precios Inmobiliarios</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            margin-bottom: 20px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: #333;
+        }
+
+        input, select {
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn-predict {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .btn-predict:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-predict:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .result {
+            display: none;
+            text-align: center;
+            padding: 30px;
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            border-radius: 12px;
+            color: white;
+            margin-top: 20px;
+        }
+
+        .result.show {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .result h2 {
+            font-size: 3rem;
+            margin-bottom: 10px;
+        }
+
+        .result p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .error {
+            display: none;
+            text-align: center;
+            padding: 20px;
+            background: #ff6b6b;
+            border-radius: 12px;
+            color: white;
+            margin-top: 20px;
+        }
+
+        .error.show {
+            display: block;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .loading.show {
+            display: block;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .model-info {
+            font-size: 0.9rem;
+            color: #666;
+            text-align: center;
+            margin-top: 10px;
+        }
+
+        footer {
+            text-align: center;
+            color: white;
+            margin-top: 30px;
+            opacity: 0.8;
+        }
+
+        footer a {
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🏠 Predictor de Precios</h1>
+            <p>Predice el valor de mercado de propiedades en Ames, Iowa</p>
+        </header>
+
+        <div class="card">
+            <form id="predictForm">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="overall_qual">Calidad (1-10)</label>
+                        <input type="number" id="overall_qual" name="overall_qual" min="1" max="10" value="7" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="gr_liv_area">Superficie (pies²)</label>
+                        <input type="number" id="gr_liv_area" name="gr_liv_area" min="1" value="1500" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="total_bsmt_sf">Sótano (pies²)</label>
+                        <input type="number" id="total_bsmt_sf" name="total_bsmt_sf" min="0" value="800">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="full_bath">Baños completos</label>
+                        <input type="number" id="full_bath" name="full_bath" min="0" value="2">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="bedroom_abvgr">Habitaciones</label>
+                        <input type="number" id="bedroom_abvgr" name="bedroom_abvgr" min="0" value="3">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="garage_cars">Capacidad Garage</label>
+                        <input type="number" id="garage_cars" name="garage_cars" min="0" value="2">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="garage_area">Superficie Garage</label>
+                        <input type="number" id="garage_area" name="garage_area" min="0" value="500">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="lot_frontage">Frente del Lote</label>
+                        <input type="number" id="lot_frontage" name="lot_frontage" min="0" value="60">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="neighborhood">Barrio</label>
+                        <select id="neighborhood" name="neighborhood" required>
+                            <option value="NAmes">North Ames</option>
+                            <option value="CollgCr">College Creek</option>
+                            <option value="OldTown">Old Town</option>
+                            <option value="Edwards">Edwards</option>
+                            <option value="Somerst">Somerset</option>
+                            <option value="Gilbert">Gilbert</option>
+                            <option value="NridgHt">Northridge Heights</option>
+                            <option value="Sawyer">Sawyer</option>
+                            <option value="NWAmes">Northwest Ames</option>
+                            <option value="SawyerW">Sawyer West</option>
+                            <option value="BrkSide">Brookside</option>
+                            <option value="Crawfor">Crawford</option>
+                            <option value="Mitchel">Mitchell</option>
+                            <option value="NoRidge">Northridge</option>
+                            <option value="Timber">Timberland</option>
+                            <option value="IDOTRR">Iowa DOT and Rail Road</option>
+                            <option value="ClearCr">Clear Creek</option>
+                            <option value="StoneBr">Stone Brook</option>
+                            <option value="SWISU">South & West of Iowa State University</option>
+                            <option value="Blueste">Bluestem</option>
+                            <option value="MeadowV">Meadow Village</option>
+                            <option value="BrDale">Briardale</option>
+                            <option value="Veenker">Veenker</option>
+                            <option value="NPkVill">Northpark Villa</option>
+                            <option value="Greens">Greens</option>
+                            <option value="GrnHill">Green Hills</option>
+                            <option value="Landmrk">Landmark</option>
+                        </select>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-predict" id="btnPredict">
+                    🔮 Predecir Precio
+                </button>
+            </form>
+
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p>Calculando predicción...</p>
+            </div>
+
+            <div class="result" id="result">
+                <h2 id="precioFormateado"></h2>
+                <p id="modeloInfo"></p>
+            </div>
+
+            <div class="error" id="error">
+                <p id="errorMessage"></p>
+            </div>
+
+            <p class="model-info" id="modelInfoText"></p>
+        </div>
+
+        <footer>
+            <p>Proyecto de Portafolio — Gestión de Datos para IA</p>
+            <p>Modelo: Random Forest | R² = 96.5%</p>
+        </footer>
+    </div>
+
+    <script>
+        // Determinar la URL base de la API
+        // En Render, la API está en el mismo dominio
+        // En desarrollo local, está en localhost:8000
+        const API_BASE = window.location.hostname === 'localhost' 
+            ? 'http://localhost:8000' 
+            : '';
+
+        // Cargar info del modelo al iniciar
+        async function loadModelInfo() {
+            try {
+                const response = await fetch(`${API_BASE}/model/info`);
+                if (response.ok) {
+                    const data = await response.json();
+                    document.getElementById('modelInfoText').textContent = 
+                        `Modelo: ${data.modelo} | R² = ${(data.r2 * 100).toFixed(1)}% | MAE = $${data.mae.toLocaleString()}`;
+                }
+            } catch (error) {
+                console.log('No se pudo cargar info del modelo');
+            }
+        }
+
+        // Manejar el formulario
+        document.getElementById('predictForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const btn = document.getElementById('btnPredict');
+            const loading = document.getElementById('loading');
+            const result = document.getElementById('result');
+            const error = document.getElementById('error');
+
+            // Reset UI
+            btn.disabled = true;
+            loading.classList.add('show');
+            result.classList.remove('show');
+            error.classList.remove('show');
+
+            // Recopilar datos del formulario
+            const formData = {
+                overall_qual: parseInt(document.getElementById('overall_qual').value),
+                gr_liv_area: parseInt(document.getElementById('gr_liv_area').value),
+                total_bsmt_sf: parseFloat(document.getElementById('total_bsmt_sf').value) || 0,
+                full_bath: parseInt(document.getElementById('full_bath').value) || 0,
+                bedroom_abvgr: parseInt(document.getElementById('bedroom_abvgr').value) || 0,
+                garage_cars: parseFloat(document.getElementById('garage_cars').value) || 0,
+                garage_area: parseFloat(document.getElementById('garage_area').value) || 0,
+                lot_frontage: parseFloat(document.getElementById('lot_frontage').value) || 0,
+                neighborhood: document.getElementById('neighborhood').value
+            };
+
+            try {
+                const response = await fetch(`${API_BASE}/predict`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.detail || 'Error en la predicción');
+                }
+
+                const data = await response.json();
+
+                // Mostrar resultado
+                document.getElementById('precioFormateado').textContent = data.precio_formateado;
+                document.getElementById('modeloInfo').textContent = 
+                    `${data.modelo_usado} — Confianza: ${(data.confianza_r2 * 100).toFixed(1)}%`;
+                result.classList.add('show');
+
+            } catch (err) {
+                document.getElementById('errorMessage').textContent = err.message;
+                error.classList.add('show');
+            } finally {
+                btn.disabled = false;
+                loading.classList.remove('show');
+            }
+        });
+
+        // Cargar info al iniciar
+        loadModelInfo();
+    </script>
+</body>
+</html>

@@ -1,0 +1,47 @@
+# ruff.toml
+# =========
+# Configuración del linter Ruff
+# Más rápido que flake8 + black combinados
+
+# Línea máxima de caracteres
+line-length = 100
+
+# Target Python version
+target-version = "py310"
+
+# Reglas de linting a habilitar
+select = [
+    "E",      # pycodestyle errors
+    "W",      # pycodestyle warnings
+    "F",      # pyflakes
+    "I",      # isort (orden de imports)
+    "N",      # pep8-naming
+    "UP",     # pyupgrade
+    "B",      # flake8-bugbear
+    "SIM",    # flake8-simplify
+    "RUF",    # ruff-specific rules
+]
+
+# Reglas a ignorar
+ignore = [
+    "E501",   # line too long (manejado por formatter)
+    "B008",   # function call in default argument (FastAPI Depends)
+]
+
+# Excluir carpetas
+exclude = [
+    ".git",
+    ".venv",
+    "venv",
+    "__pycache__",
+    "models/",
+    "data/",
+]
+
+# Configuración de isort (orden de imports)
+[lint.isort]
+known-first-party = ["app", "scripts"]
+
+# Configuración por archivo
+[lint.per-file-ignores]
+"tests/*" = ["S101"]  # Permitir assert en tests

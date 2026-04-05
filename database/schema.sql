@@ -5,7 +5,10 @@
 -- Última actualización: 2026-03-26
 -- =====================================================
 
--- Eliminar tabla si ya existe (útil para re-ingestas)
+-- Orden correcto: Primero dropear la VISTA (depende de la tabla)
+DROP VIEW IF EXISTS vw_properties_clean;
+
+-- Luego dropear la TABLA
 DROP TABLE IF EXISTS properties_raw;
 
 -- Tabla principal con los datos en bruto desde el CSV
@@ -74,7 +77,7 @@ SELECT
     overall_qual,
     year_built,
     gr_liv_area,
-    total_bsmt_sf,
+    COALESCE(total_bsmt_sf, 0)  AS total_bsmt_sf,   -- Nulos posibles (casas sin sótano)
     full_bath,
     bedroom_abvgr,
     COALESCE(garage_cars, 0)    AS garage_cars,

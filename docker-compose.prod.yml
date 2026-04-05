@@ -1,0 +1,44 @@
+# docker-compose.prod.yml
+# ========================
+# Configuración de producción para Render
+# Incluye PostgreSQL + API en un solo compose
+
+services:
+  # ─────────────────────────────────────────────
+  # PostgreSQL — Base de datos
+  # ─────────────────────────────────────────────
+  db:
+    image: postgres:15
+    restart: always
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-housing_db}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ─────────────────────────────────────────────
+  # API — FastAPI
+  # ─────────────────────────────────────────────
+  api:
+    build:
+      context: .
+      dockerfile: dockerfile
+    restart: always
+    ports:
+      - "${PORT:-8000}:8000"
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-housing_db}
+      PORT: 8000
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  pgdata:

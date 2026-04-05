@@ -1,0 +1,53 @@
+# docker-compose.yml
+# ===================
+# Orquestación local: PostgreSQL + pgAdmin
+# Uso: docker compose up -d
+# Parar: docker compose down
+# Parar + borrar datos: docker compose down -v
+
+services:
+  # ─────────────────────────────────────────────
+  # PostgreSQL 15 — Motor de base de datos
+  # ─────────────────────────────────────────────
+  db:
+    image: postgres:15
+    container_name: housing_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-housing_db}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data    # Persistencia de datos
+      - ./database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql  # Auto-ejecutar schema al iniciar
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # ─────────────────────────────────────────────
+  # pgAdmin 4 — Interfaz web para PostgreSQL
+  # Acceder: http://localhost:5050
+  # Login: admin@housing.com / admin
+  # ─────────────────────────────────────────────
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: housing_pgadmin
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@housing.com}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-admin}
+    ports:
+      - "${PGADMIN_PORT:-5050}:80"
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  pgdata:        # Datos de PostgreSQL (sobrevive a docker compose down)
+  pgadmin_data:  # Configuración de pgAdmin

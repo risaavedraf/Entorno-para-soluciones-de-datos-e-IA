@@ -1,0 +1,44 @@
+# .dockerignore
+# =============
+# Archivos que NO se copian al build de Docker
+
+# Git
+.git
+.gitignore
+
+# Documentación
+docs/
+*.md
+
+# Entorno
+.env
+.env.*
+!.env.example
+
+# Datos
+data/
+database/
+scripts/
+
+# Tests
+tests/
+.pytest_cache/
+
+# IDEs
+.vscode/
+.idea/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# Modelos (se entrenan localmente)
+models/
+!models/.gitkeep
+
+# Docker
+docker-compose*.yml
+.dockerignore
