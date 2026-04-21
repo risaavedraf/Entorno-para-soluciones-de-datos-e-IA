@@ -1,6 +1,6 @@
 # Pipeline MLOps — Predicción de Precios Inmobiliarios
 
-[![CI Pipeline](https://github.com/TU_USUARIO/Entorno-para-soluciones-de-datos-e-IA/actions/workflows/ci.yml/badge.svg)](https://github.com/TU_USUARIO/Entorno-para-soluciones-de-datos-e-IA/actions/workflows/ci.yml)
+[![CI Pipeline](https://github.com/risaavedraf/Entorno-para-soluciones-de-datos-e-IA/actions/workflows/ci.yml/badge.svg)](https://github.com/risaavedraf/Entorno-para-soluciones-de-datos-e-IA/actions/workflows/ci.yml)
 
 **Asignatura:** Gestión de Datos para IA (ITY1101) — DuocUC  
 **Dataset:** Ames Housing Dataset (2930 propiedades, 82 variables)  
@@ -431,7 +431,7 @@ Toda la API genera logs en formato JSON estructurado con structlog:
 ### 1. Clonar y configurar
 
 ```bash
-git clone https://github.com/TU_USUARIO/Entorno-para-soluciones-de-datos-e-IA.git
+git clone https://github.com/risaavedraf/Entorno-para-soluciones-de-datos-e-IA.git
 cd Entorno-para-soluciones-de-datos-e-IA
 pip install -r requirements.txt
 ```

@@ -103,17 +103,28 @@ def train_and_select_best(X: pd.DataFrame, y: pd.Series) -> tuple[str, dict[str,
     return best_name, metrics, best["pipeline"]  # type: ignore[return-value]
 
 
-def persist_model(best_name: str, metrics: dict[str, float], pipeline: Pipeline) -> Path:
+def persist_model(
+    best_name: str,
+    metrics: dict[str, float],
+    pipeline: Pipeline,
+    feature_names: list[str] | None = None,
+) -> Path:
     settings.MODELS_DIR.mkdir(parents=True, exist_ok=True)
     model_path = settings.MODELS_DIR / "model.joblib"
     joblib.dump(pipeline, model_path)
 
+    # Feature names from training data (for ONNX alignment)
+    if feature_names is None:
+        feature_names = (
+            list(pipeline.named_steps["model"].feature_names_in_)
+            if hasattr(pipeline.named_steps.get("model"), "feature_names_in_")
+            else []
+        )
+
     metadata = {
         "modelo": best_name,
         **metrics,
-        "features": list(pipeline.named_steps["model"].feature_names_in_)
-        if hasattr(pipeline.named_steps.get("model"), "feature_names_in_")
-        else [],
+        "features": feature_names,
     }
     (settings.MODELS_DIR / "metadata.json").write_text(
         json.dumps(metadata, indent=2), encoding="utf-8"
@@ -151,7 +162,7 @@ def run() -> Path:
                 f"Model registration failed — run marked as not promotable: {exc}"
             ) from exc
 
-        return persist_model(best_name, metrics, best_pipeline)
+        return persist_model(best_name, metrics, best_pipeline, feature_names=list(X.columns))
 
 
 if __name__ == "__main__":
