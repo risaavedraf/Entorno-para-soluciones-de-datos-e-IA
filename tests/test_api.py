@@ -1,14 +1,8 @@
-"""
-tests/test_api.py
------------------
-Tests para la API de Predicción Inmobiliaria.
-Usa mocks para no depender del modelo real (aislamiento de tests).
+"""Tests de API adaptados a ModelManager."""
 
-Uso:
-    pytest tests/ -v
-"""
+from __future__ import annotations
 
-from unittest.mock import MagicMock, patch
+import json
 
 import numpy as np
 import pytest
@@ -16,75 +10,45 @@ from fastapi.testclient import TestClient
 
 
 # ────────────────────────────────────────────────────
-# 1. FIXTURE: Mock del modelo
+# 1. FIXTURE: Mock del manager
 # ────────────────────────────────────────────────────
 @pytest.fixture
-def mock_model():
-    """Crea un mock del pipeline de scikit-learn."""
-    mock = MagicMock()
+def mock_manager():
+    class StubManager:
+        runtime_type = "sklearn"
+        model_version = "v-test-1"
+        sklearn_model = None
 
-    # Simular que el modelo predice un precio
-    mock.predict.return_value = np.array([175000.0])
+        def is_loaded(self):
+            return True
 
-    # Simular feature_names_in_ (columnas que espera el modelo)
-    mock.feature_names_in_ = [
-        "overall_qual",
-        "gr_liv_area",
-        "total_bsmt_sf",
-        "full_bath",
-        "bedroom_abvgr",
-        "garage_cars",
-        "garage_area",
-        "lot_frontage",
-        "ratio_area_banos",
-        "area_por_habitacion",
-        "tiene_sotano",
-        "tiene_garage",
-        "nbh_Blueste",
-        "nbh_BrDale",
-        "nbh_BrkSide",
-        "nbh_ClearCr",
-        "nbh_CollgCr",
-        "nbh_Crawfor",
-        "nbh_Edwards",
-        "nbh_Gilbert",
-        "nbh_IDOTRR",
-        "nbh_MeadowV",
-        "nbh_Mitchel",
-        "nbh_NAmes",
-        "nbh_NPkVill",
-        "nbh_NWAmes",
-        "nbh_NoRidge",
-        "nbh_NridgHt",
-        "nbh_OldTown",
-        "nbh_SWISU",
-        "nbh_Sawyer",
-        "nbh_SawyerW",
-        "nbh_Somerst",
-        "nbh_StoneBr",
-        "nbh_Timber",
-        "nbh_Veenker",
-    ]
+        def predict(self, _df):
+            return np.array([175000.0])
 
-    return mock
+    return StubManager()
 
 
 @pytest.fixture
-def mock_metadata():
-    """Crea un mock de la metadata del modelo."""
-    return {"modelo": "Random Forest", "r2": 0.9649, "mae": 9210.0, "rmse": 13808.0}
-
-
-@pytest.fixture
-def client(mock_model, mock_metadata):
+def client(mock_manager, tmp_path, monkeypatch):
     """
     Crea un TestClient con el modelo mockeado.
     Esto aísla los tests del modelo real.
     """
-    with patch("app.main.modelo", mock_model), patch("app.main.metadata", mock_metadata):
-        from app.main import app
+    models_dir = tmp_path / "models"
+    models_dir.mkdir(parents=True, exist_ok=True)
+    (models_dir / "metadata.json").write_text(
+        json.dumps({"modelo": "Random Forest", "r2": 0.9649, "mae": 9210.0, "rmse": 13808.0}),
+        encoding="utf-8",
+    )
+    monkeypatch.setattr("app.config.settings.MODELS_DIR", models_dir)
+    monkeypatch.setattr("app.config.settings.ONNX_MODEL_PATH", models_dir / "model.onnx")
 
-        yield TestClient(app)
+    from app.main import app
+
+    original_manager = getattr(app.state, "model_manager", None)
+    app.state.model_manager = mock_manager
+    yield TestClient(app)
+    app.state.model_manager = original_manager
 
 
 # ────────────────────────────────────────────────────
@@ -146,6 +110,7 @@ class TestHealth:
         data = response.json()
         assert data["status"] == "ok"
         assert data["modelo_cargado"] is True
+        assert data["model_loaded"] is True
 
 
 # ────────────────────────────────────────────────────
@@ -186,6 +151,8 @@ class TestPredict:
         data = response.json()
         assert "confianza_r2" in data
         assert 0 <= data["confianza_r2"] <= 1
+        assert data["model_version"] == "v-test-1"
+        assert data["runtime_type"] == "sklearn"
 
     def test_predict_precio_rango_realista(self, client):
         """El precio debe estar en un rango realista ($35K - $500K)."""
@@ -259,20 +226,35 @@ class TestDocs:
 # 8. TEST: MODELO NO CARGADO
 # ────────────────────────────────────────────────────
 class TestModelNotLoaded:
-    def test_predict_returns_503_without_model(self):
+    def test_predict_returns_503_without_model(self, tmp_path, monkeypatch):
         """POST /predict sin modelo cargado debe retornar 503."""
-        with patch("app.main.modelo", None):
-            from app.main import app
+        from app.main import app
 
-            test_client = TestClient(app)
-            response = test_client.post("/predict", json=VALID_INPUT)
-            assert response.status_code == 503
+        class EmptyManager:
+            runtime_type = "sklearn"
+            model_version = "unknown"
+            sklearn_model = None
 
-    def test_model_info_returns_404_without_model(self):
+            def is_loaded(self):
+                return False
+
+            def predict(self, _df):
+                return np.array([0.0])
+
+        app.state.model_manager = EmptyManager()
+        test_client = TestClient(app)
+        response = test_client.post("/predict", json=VALID_INPUT)
+        assert response.status_code == 503
+        app.state.model_manager = None
+
+    def test_model_info_returns_404_without_model(self, tmp_path, monkeypatch):
         """GET /model/info sin metadata debe retornar 404."""
-        with patch("app.main.metadata", None):
-            from app.main import app
+        models_dir = tmp_path / "empty-models"
+        models_dir.mkdir(parents=True, exist_ok=True)
+        monkeypatch.setattr("app.config.settings.MODELS_DIR", models_dir)
 
-            test_client = TestClient(app)
-            response = test_client.get("/model/info")
-            assert response.status_code == 404
+        from app.main import app
+
+        test_client = TestClient(app)
+        response = test_client.get("/model/info")
+        assert response.status_code == 404

@@ -22,9 +22,13 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # Copiar código de la aplicación
 COPY app/ app/
+COPY pipeline/ pipeline/
 COPY models/ models/
+# model.onnx (if present) is included via models/ copy
 COPY static/ static/
-COPY requirements.txt .
+
+# Ensure ONNX runtime is explicitly present
+RUN pip install --no-cache-dir onnxruntime
 
 # Cambiar al usuario no-root
 USER appuser

@@ -8,29 +8,46 @@ Uso:
     uvicorn app.main:app --reload
 """
 
-import json
 from contextlib import asynccontextmanager
 from pathlib import Path
+import time
+from uuid import uuid4
 
-import joblib
 import pandas as pd
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
+from app.config import settings
+from app.dependencies import ModelManager
+from app.logging_config import setup_logging
+from pipeline.limpieza import align_to_feature_names, create_features, encode_categoricals
+
 # ────────────────────────────────────────────────────
 # 1. RUTAS Y CONFIGURACIÓN
 # ────────────────────────────────────────────────────
 BASE_DIR = Path(__file__).resolve().parent.parent
-MODELS_DIR = BASE_DIR / "models"
-MODEL_PATH = MODELS_DIR / "model.joblib"
-METADATA_PATH = MODELS_DIR / "metadata.json"
 STATIC_DIR = BASE_DIR / "static"
 
-# Variables globales (se cargan al iniciar)
-modelo = None
-metadata = None
+try:
+    import structlog
+except Exception:  # pragma: no cover
+    structlog = None
+
+
+def get_logger():
+    if structlog is None:
+        return None
+    return structlog.get_logger("app.main")
+
+
+def _get_model_manager() -> ModelManager:
+    manager = getattr(app.state, "model_manager", None)
+    if manager is None:
+        manager = ModelManager()
+        app.state.model_manager = manager
+    return manager
 
 
 # ────────────────────────────────────────────────────
@@ -39,25 +56,21 @@ metadata = None
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Carga el modelo al iniciar la API."""
-    global modelo, metadata
-
-    print("🔄 Cargando modelo...")
-
-    if not MODEL_PATH.exists():
-        print(f"⚠️  Modelo no encontrado en: {MODEL_PATH}")
-        print("   Ejecutá: python scripts/entrenamiento.py")
-    else:
-        modelo = joblib.load(MODEL_PATH)
-        print(f"✅ Modelo cargado: {MODEL_PATH}")
-
-    if METADATA_PATH.exists():
-        with open(METADATA_PATH) as f:
-            metadata = json.load(f)
-        print(f"📋 Metadata cargada: {metadata['modelo']} (R²={metadata['r2']:.4f})")
+    setup_logging()
+    logger = get_logger()
+    if not hasattr(app.state, "model_manager"):
+        app.state.model_manager = ModelManager()
+    if logger:
+        logger.info(
+            "startup",
+            model_loaded=app.state.model_manager.is_loaded(),
+            runtime_type=app.state.model_manager.runtime_type,
+            model_version=app.state.model_manager.model_version,
+        )
 
     yield  # La app está corriendo
-
-    print("👋 Cerrando API...")
+    if logger:
+        logger.info("shutdown")
 
 
 # ────────────────────────────────────────────────────
@@ -117,6 +130,8 @@ class PrediccionOutput(BaseModel):
     precio_formateado: str = Field(..., description="Precio formateado")
     modelo_usado: str = Field(..., description="Nombre del modelo")
     confianza_r2: float = Field(..., description="R² del modelo (0-1)")
+    model_version: str = Field(..., description="Versión de modelo activa")
+    runtime_type: str = Field(..., description="Runtime activo (onnx/sklearn)")
 
 
 # ────────────────────────────────────────────────────
@@ -135,10 +150,11 @@ def read_root():
 @app.get("/api")
 def api_info():
     """Devuelve info de la API en JSON."""
+    manager = _get_model_manager()
     return {
         "mensaje": "🏠 API de Predicción Inmobiliaria",
         "estado": "operativo",
-        "modelo": metadata["modelo"] if metadata else "No cargado",
+        "modelo": manager.model_version,
         "endpoints": {
             "predict": "POST /predict",
             "health": "GET /health",
@@ -151,17 +167,31 @@ def api_info():
 @app.get("/health")
 def health_check():
     """Health check para Render y monitoreo."""
-    modelo_cargado = modelo is not None
-    return {"status": "ok" if modelo_cargado else "degraded", "modelo_cargado": modelo_cargado}
+    manager = _get_model_manager()
+    model_loaded = manager.is_loaded()
+    return {
+        "status": "ok" if model_loaded else "degraded",
+        "modelo_cargado": model_loaded,
+        "model_loaded": model_loaded,
+        "model_version": manager.model_version,
+        "runtime_type": manager.runtime_type,
+    }
 
 
 @app.get("/model/info")
 def model_info():
     """Devuelve información del modelo entrenado."""
-    if not metadata:
+    manager = _get_model_manager()
+    metadata_path = settings.MODELS_DIR / "metadata.json"
+    if not metadata_path.exists():
         raise HTTPException(
             status_code=404, detail="Modelo no encontrado. Ejecutá: python scripts/entrenamiento.py"
         )
+    import json
+
+    metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+    metadata["runtime_type"] = manager.runtime_type
+    metadata["model_version"] = manager.model_version
     return metadata
 
 
@@ -172,12 +202,15 @@ def predict(propiedad: PropiedadInput):
 
     Recibe las características de la propiedad y devuelve el precio estimado.
     """
-    if modelo is None:
+    manager = _get_model_manager()
+    if not manager.is_loaded():
         raise HTTPException(
             status_code=503, detail="Modelo no cargado. Ejecutá: python scripts/entrenamiento.py"
         )
 
     try:
+        request_id = str(uuid4())
+        start = time.perf_counter()
         # Convertir input a DataFrame
         datos = {
             "overall_qual": [propiedad.overall_qual],
@@ -192,40 +225,51 @@ def predict(propiedad: PropiedadInput):
 
         df = pd.DataFrame(datos)
 
-        # Feature engineering (igual que en entrenamiento.py)
-        df["ratio_area_banos"] = df["gr_liv_area"] / (df["full_bath"] + 1)
-        df["area_por_habitacion"] = df["gr_liv_area"] / (df["bedroom_abvgr"] + 1)
-        df["tiene_sotano"] = (df["total_bsmt_sf"] > 0).astype(int)
-        df["tiene_garage"] = (df["garage_cars"] > 0).astype(int)
-
-        # One-Hot Encoding para neighborhood
-        # Necesitamos TODAS las columnas que el modelo espera
-        # Las columnas nbh_XXX se crean con get_dummies
+        # Feature engineering (reuse training pipeline logic)
         df["neighborhood"] = propiedad.neighborhood
-        df = pd.get_dummies(df, columns=["neighborhood"], prefix="nbh", drop_first=True)
+        df = create_features(df)
+        df = encode_categoricals(df)
 
-        # Asegurar que tenemos TODAS las columnas que el modelo espera
-        # Las que faltan se llenan con 0 (no pertenece a ese barrio)
-        if hasattr(modelo, "feature_names_in_"):
-            for col in modelo.feature_names_in_:
-                if col not in df.columns:
-                    df[col] = 0
-            # Reordenar columnas según lo que espera el modelo
-            df = df[modelo.feature_names_in_]
+        sklearn_model = getattr(manager, "sklearn_model", None)
+        if manager.runtime_type == "sklearn" and sklearn_model is not None:
+            if hasattr(sklearn_model, "feature_names_in_"):
+                df = align_to_feature_names(df, list(sklearn_model.feature_names_in_))
 
-        # Predecir
-        precio = modelo.predict(df)[0]
+        precio = manager.predict(df)[0]
+        elapsed_ms = (time.perf_counter() - start) * 1000
 
         # Formatear respuesta
-        r2 = metadata["r2"] if metadata else 0.0
-        modelo_nombre = metadata["modelo"] if metadata else "Random Forest"
+        metadata_path = settings.MODELS_DIR / "metadata.json"
+        r2 = 0.0
+        modelo_nombre = "Random Forest"
+        if metadata_path.exists():
+            import json
+
+            metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+            r2 = float(metadata.get("r2", 0.0))
+            modelo_nombre = str(metadata.get("modelo", "Random Forest"))
+
+        logger = get_logger()
+        if logger:
+            logger.info(
+                "prediction_completed",
+                request_id=request_id,
+                latency_ms=round(elapsed_ms, 3),
+                model_version=manager.model_version,
+                runtime_type=manager.runtime_type,
+            )
 
         return PrediccionOutput(
             precio_predicho=round(float(precio), 2),
             precio_formateado=f"${precio:,.0f} USD",
             modelo_usado=modelo_nombre,
             confianza_r2=r2,
+            model_version=manager.model_version,
+            runtime_type=manager.runtime_type,
         )
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error en predicción: {e}") from e
+        logger = get_logger()
+        if logger:
+            logger.exception("prediction_failed", error=str(e))
+        raise HTTPException(status_code=500, detail="Error interno en la predicción") from e
