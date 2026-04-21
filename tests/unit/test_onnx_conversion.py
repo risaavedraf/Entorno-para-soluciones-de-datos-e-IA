@@ -84,7 +84,9 @@ def test_conversion_raises_runtime_error_if_dependency_missing(tmp_path, monkeyp
     model_path = tmp_path / "model.joblib"
     X = pd.DataFrame({"a": [1.0, 2.0, 3.0], "b": [2.0, 3.0, 4.0]})
     y = pd.Series([10.0, 12.0, 14.0])
-    model = Pipeline([("scaler", StandardScaler()), ("model", RandomForestRegressor(n_estimators=2))])
+    model = Pipeline(
+        [("scaler", StandardScaler()), ("model", RandomForestRegressor(n_estimators=2))]
+    )
     model.fit(X, y)
     import joblib
 

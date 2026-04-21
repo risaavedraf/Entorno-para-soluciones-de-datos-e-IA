@@ -140,7 +140,9 @@ def detect_outliers(df: pd.DataFrame, numeric_columns: list[str]) -> OutlierRepo
         zscore_outliers[column] = _zscore_outliers(numeric)
         iqr_outliers[column] = _iqr_outliers(numeric)
 
-    total = int(sum(max(zscore_outliers.get(k, 0), iqr_outliers.get(k, 0)) for k in zscore_outliers))
+    total = int(
+        sum(max(zscore_outliers.get(k, 0), iqr_outliers.get(k, 0)) for k in zscore_outliers)
+    )
     return OutlierReport(
         zscore_outliers=zscore_outliers,
         iqr_outliers=iqr_outliers,

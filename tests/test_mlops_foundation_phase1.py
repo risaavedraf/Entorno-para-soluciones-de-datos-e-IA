@@ -16,7 +16,9 @@ def test_requirements_include_mlops_dependencies():
         "pydantic-settings",
     }
 
-    lines = {line.strip() for line in content.splitlines() if line.strip() and not line.startswith("#")}
+    lines = {
+        line.strip() for line in content.splitlines() if line.strip() and not line.startswith("#")
+    }
     for dep in expected:
         assert dep in lines
 

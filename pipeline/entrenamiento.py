@@ -44,7 +44,9 @@ def _build_models() -> dict[str, Pipeline]:
                 ("scaler", StandardScaler()),
                 (
                     "model",
-                    RandomForestRegressor(n_estimators=100, max_depth=15, random_state=42, n_jobs=-1),
+                    RandomForestRegressor(
+                        n_estimators=100, max_depth=15, random_state=42, n_jobs=-1
+                    ),
                 ),
             ]
         ),
@@ -113,7 +115,9 @@ def persist_model(best_name: str, metrics: dict[str, float], pipeline: Pipeline)
         if hasattr(pipeline.named_steps.get("model"), "feature_names_in_")
         else [],
     }
-    (settings.MODELS_DIR / "metadata.json").write_text(json.dumps(metadata, indent=2), encoding="utf-8")
+    (settings.MODELS_DIR / "metadata.json").write_text(
+        json.dumps(metadata, indent=2), encoding="utf-8"
+    )
     return model_path
 
 

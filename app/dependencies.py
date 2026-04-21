@@ -41,7 +41,9 @@ class ModelManager:
                 self.onnx_session = _load_onnx_session(onnx_path)
                 self.runtime_type = "onnx"
             except Exception:
-                logger.exception("Failed to load ONNX model from %s, falling back to sklearn", onnx_path)
+                logger.exception(
+                    "Failed to load ONNX model from %s, falling back to sklearn", onnx_path
+                )
                 self.onnx_session = None
 
         if self.onnx_session is None and sklearn_path.exists():
@@ -63,7 +65,9 @@ class ModelManager:
         try:
             if self.onnx_session is not None:
                 input_name = self.onnx_session.get_inputs()[0].name
-                if self.sklearn_model is not None and hasattr(self.sklearn_model, "feature_names_in_"):
+                if self.sklearn_model is not None and hasattr(
+                    self.sklearn_model, "feature_names_in_"
+                ):
                     aligned = align_to_feature_names(df, list(self.sklearn_model.feature_names_in_))
                     input_data = aligned.to_numpy(dtype=np.float32)
                 else:

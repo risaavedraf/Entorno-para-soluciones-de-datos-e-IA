@@ -64,7 +64,9 @@ def normalize_columns(df: pd.DataFrame) -> pd.DataFrame:
     """Normaliza columnas para SQL-friendly naming."""
     normalized = df.copy()
     normalized.columns = (
-        normalized.columns.str.lower().str.replace(" ", "_", regex=False).str.replace("/", "_", regex=False)
+        normalized.columns.str.lower()
+        .str.replace(" ", "_", regex=False)
+        .str.replace("/", "_", regex=False)
     )
     return normalized
 

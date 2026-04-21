@@ -61,7 +61,9 @@ def test_predict_returns_valid_response_with_sklearn_fallback(tmp_path, monkeypa
     models_dir = tmp_path / "models"
     models_dir.mkdir(parents=True, exist_ok=True)
     joblib.dump(_train_basic_model(), models_dir / "model.joblib")
-    (models_dir / "metadata.json").write_text(json.dumps({"version": "v-test", "r2": 0.9}), encoding="utf-8")
+    (models_dir / "metadata.json").write_text(
+        json.dumps({"version": "v-test", "r2": 0.9}), encoding="utf-8"
+    )
 
     monkeypatch.setattr("app.config.settings.MODELS_DIR", models_dir)
     monkeypatch.setattr("app.config.settings.ONNX_MODEL_PATH", models_dir / "model.onnx")
@@ -95,7 +97,9 @@ def test_predict_returns_valid_response_with_onnx_runtime(tmp_path, monkeypatch)
     models_dir.mkdir(parents=True, exist_ok=True)
     joblib.dump(_train_basic_model(), models_dir / "model.joblib")
     (models_dir / "model.onnx").write_bytes(b"fake-onnx")
-    (models_dir / "metadata.json").write_text(json.dumps({"version": "v-onnx", "r2": 0.95}), encoding="utf-8")
+    (models_dir / "metadata.json").write_text(
+        json.dumps({"version": "v-onnx", "r2": 0.95}), encoding="utf-8"
+    )
 
     monkeypatch.setattr("app.config.settings.MODELS_DIR", models_dir)
     monkeypatch.setattr("app.config.settings.ONNX_MODEL_PATH", models_dir / "model.onnx")

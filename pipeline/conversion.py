@@ -31,7 +31,9 @@ def convert_model_to_onnx(model_path: Path | None = None, onnx_path: Path | None
 
         model = joblib.load(model_path)
         n_features = len(getattr(model, "feature_names_in_", [])) or 1
-        onnx_model = convert_sklearn(model, initial_types=[("float_input", FloatTensorType([None, n_features]))])
+        onnx_model = convert_sklearn(
+            model, initial_types=[("float_input", FloatTensorType([None, n_features]))]
+        )
         onnx_path.write_bytes(onnx_model.SerializeToString())
 
         metadata = build_conversion_metadata(onnx_path)

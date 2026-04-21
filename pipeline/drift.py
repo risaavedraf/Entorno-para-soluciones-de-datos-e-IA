@@ -59,9 +59,7 @@ def detect_drift(reference_df: pd.DataFrame, current_df: pd.DataFrame) -> DriftR
     A feature is flagged as drifted if EITHER metric crosses its threshold.
     """
     common_numeric = [
-        c
-        for c in reference_df.select_dtypes(include="number").columns
-        if c in current_df.columns
+        c for c in reference_df.select_dtypes(include="number").columns if c in current_df.columns
     ]
 
     psi_scores: dict[str, float] = {}
