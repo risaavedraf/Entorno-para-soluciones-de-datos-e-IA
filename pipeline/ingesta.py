@@ -101,8 +101,32 @@ def ejecutar_schema(engine, schema_path: Path = SCHEMA_PATH) -> None:
 
 
 def cargar_a_postgres(df: pd.DataFrame, engine) -> None:
-    ejecutar_schema(engine)
-    df.to_sql(name="properties_raw", con=engine, if_exists="append", index=False)
+    with engine.connect() as conn:
+        # Drop view first (depends on table)
+        conn.execute(text("DROP VIEW IF EXISTS vw_properties_clean"))
+        # Drop and recreate table
+        conn.execute(text("DROP TABLE IF EXISTS properties_raw"))
+        conn.commit()
+
+    # Load clean data
+    df.to_sql(name="properties_raw", con=engine, if_exists="fail", index=False)
+
+    # Recreate view
+    with engine.connect() as conn:
+        conn.execute(text("""
+            CREATE OR REPLACE VIEW vw_properties_clean AS
+            SELECT
+                order_id, neighborhood, overall_qual, year_built, gr_liv_area,
+                COALESCE(total_bsmt_sf, 0) AS total_bsmt_sf,
+                full_bath, bedroom_abvgr,
+                COALESCE(garage_cars, 0) AS garage_cars,
+                COALESCE(garage_area, 0) AS garage_area,
+                COALESCE(lot_frontage, 0) AS lot_frontage,
+                saleprice
+            FROM properties_raw
+            WHERE saleprice > 0 AND gr_liv_area < 4000 AND saleprice < 500000
+        """))
+        conn.commit()
 
 
 def log_raw_stats_to_mlflow(stats: dict[str, Any]) -> None:

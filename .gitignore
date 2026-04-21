@@ -12,6 +12,15 @@ data/processed/
 # models/
 models/*.gitkeep
 
+# MLflow tracking (se genera localmente)
+mlflow.db
+mlflow.db-journal
+mlruns/
+
+# Reports de drift (se generan localmente)
+reports/
+!reports/.gitkeep
+
 # Python
 __pycache__/
 *.py[cod]
