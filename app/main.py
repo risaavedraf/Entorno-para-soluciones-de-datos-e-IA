@@ -8,9 +8,9 @@ Uso:
     uvicorn app.main:app --reload
 """
 
+import time
 from contextlib import asynccontextmanager
 from pathlib import Path
-import time
 from uuid import uuid4
 
 import pandas as pd
@@ -231,9 +231,12 @@ def predict(propiedad: PropiedadInput):
         df = encode_categoricals(df)
 
         sklearn_model = getattr(manager, "sklearn_model", None)
-        if manager.runtime_type == "sklearn" and sklearn_model is not None:
-            if hasattr(sklearn_model, "feature_names_in_"):
-                df = align_to_feature_names(df, list(sklearn_model.feature_names_in_))
+        if (
+            manager.runtime_type == "sklearn"
+            and sklearn_model is not None
+            and hasattr(sklearn_model, "feature_names_in_")
+        ):
+            df = align_to_feature_names(df, list(sklearn_model.feature_names_in_))
 
         precio = manager.predict(df)[0]
         elapsed_ms = (time.perf_counter() - start) * 1000

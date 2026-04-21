@@ -2,7 +2,6 @@ from pathlib import Path
 
 import pandas as pd
 
-
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
 
@@ -90,9 +89,9 @@ def test_limpieza_creates_expected_features_and_xy():
 
 
 def test_entrenamiento_gate_blocks_low_r2():
-    from pipeline.entrenamiento import enforce_r2_gate
-
     import pytest
+
+    from pipeline.entrenamiento import enforce_r2_gate
 
     with pytest.raises(ValueError, match="R²"):
         enforce_r2_gate(0.2)
@@ -124,6 +123,7 @@ def test_drift_report_contains_feature_scores(tmp_path):
 
 def test_detect_drift_computes_real_psi_ks():
     import numpy as np
+
     from pipeline.drift import detect_drift
 
     rng = np.random.RandomState(42)
@@ -139,6 +139,7 @@ def test_detect_drift_computes_real_psi_ks():
 
 def test_detect_drift_catches_significant_shift():
     import numpy as np
+
     from pipeline.drift import detect_drift
 
     rng = np.random.RandomState(42)

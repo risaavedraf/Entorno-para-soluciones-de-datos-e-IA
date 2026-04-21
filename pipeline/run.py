@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import argparse
 
-from pipeline import conversion, drift, entrenamiento, ingesta, limpieza
+from pipeline import conversion, entrenamiento, ingesta, limpieza
 
 
 def build_parser() -> argparse.ArgumentParser:

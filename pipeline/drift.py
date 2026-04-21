@@ -12,8 +12,7 @@ import numpy as np
 import pandas as pd
 from scipy import stats
 
-from app.config import settings
-from app.config import BASE_DIR
+from app.config import BASE_DIR, settings
 
 logger = logging.getLogger(__name__)
 

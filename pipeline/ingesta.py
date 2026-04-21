@@ -11,7 +11,6 @@ from sqlalchemy import create_engine, text
 
 from app.config import BASE_DIR, settings
 
-
 CSV_PATH = BASE_DIR / "database" / "AmesHousing.csv"
 SCHEMA_PATH = BASE_DIR / "database" / "schema.sql"
 
