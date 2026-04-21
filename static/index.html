@@ -1,56 +1,214 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" data-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🏠 Predictor de Precios Inmobiliarios</title>
+    <title>Pipeline MLOps — Predictor de Precios Inmobiliarios</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        /* ═══════════════════════════════════════════════
+           VARIABLES & THEME
+           ═══════════════════════════════════════════════ */
+        :root {
+            --bg: #f0f2f5;
+            --card-bg: #ffffff;
+            --text: #1a1a2e;
+            --text-secondary: #555;
+            --border: #e0e0e0;
+            --accent-1: #667eea;
+            --accent-2: #764ba2;
+            --success-1: #11998e;
+            --success-2: #38ef7d;
+            --error: #ff6b6b;
+            --shadow: 0 8px 32px rgba(0,0,0,0.1);
+            --radius: 12px;
         }
+
+        [data-theme="dark"] {
+            --bg: #0f0f1a;
+            --card-bg: #1a1a2e;
+            --text: #e0e0e0;
+            --text-secondary: #aaa;
+            --border: #333;
+            --shadow: 0 8px 32px rgba(0,0,0,0.4);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text);
             min-height: 100vh;
             padding: 20px;
+            transition: background 0.3s, color 0.3s;
         }
 
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-        }
+        .container { max-width: 900px; margin: 0 auto; }
 
-        header {
+        /* ═══════════════════════════════════════════════
+           HEADER
+           ═══════════════════════════════════════════════ */
+        .header {
             text-align: center;
-            color: white;
             margin-bottom: 30px;
         }
 
-        header h1 {
-            font-size: 2.5rem;
-            margin-bottom: 10px;
+        .header h1 {
+            font-size: 2.2rem;
+            background: linear-gradient(135deg, var(--accent-1), var(--accent-2));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 8px;
         }
 
-        header p {
-            font-size: 1.1rem;
-            opacity: 0.9;
+        .header .subtitle {
+            color: var(--text-secondary);
+            font-size: 1rem;
+            margin-bottom: 16px;
         }
 
+        .tech-stack {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            justify-content: center;
+            margin-bottom: 16px;
+        }
+
+        .tech-badge {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            box-shadow: var(--shadow);
+        }
+
+        .header-links {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .header-links a {
+            color: var(--accent-1);
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: opacity 0.2s;
+        }
+
+        .header-links a:hover { opacity: 0.7; }
+
+        /* ═══════════════════════════════════════════════
+           THEME TOGGLE
+           ═══════════════════════════════════════════════ */
+        .theme-toggle {
+            position: fixed;
+            top: 16px;
+            right: 16px;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 50%;
+            width: 44px;
+            height: 44px;
+            cursor: pointer;
+            font-size: 1.3rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: var(--shadow);
+            transition: transform 0.2s;
+            z-index: 100;
+        }
+
+        .theme-toggle:hover { transform: scale(1.1); }
+
+        /* ═══════════════════════════════════════════════
+           CARDS
+           ═══════════════════════════════════════════════ */
         .card {
-            background: white;
-            border-radius: 16px;
-            padding: 30px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            padding: 24px;
+            box-shadow: var(--shadow);
             margin-bottom: 20px;
+            border: 1px solid var(--border);
         }
 
+        .card-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 16px;
+            color: var(--text);
+        }
+
+        /* ═══════════════════════════════════════════════
+           MODEL METRICS
+           ═══════════════════════════════════════════════ */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 16px;
+            text-align: center;
+        }
+
+        .metric-item {
+            padding: 16px;
+            background: var(--bg);
+            border-radius: 8px;
+        }
+
+        .metric-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--accent-1), var(--accent-2));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .metric-label {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
+        /* ═══════════════════════════════════════════════
+           PIPELINE DIAGRAM
+           ═══════════════════════════════════════════════ */
+        .pipeline-steps {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .pipeline-step {
+            background: var(--bg);
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            border: 1px solid var(--border);
+        }
+
+        .pipeline-arrow {
+            color: var(--accent-1);
+            font-weight: bold;
+        }
+
+        /* ═══════════════════════════════════════════════
+           FORM
+           ═══════════════════════════════════════════════ */
         .form-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
+            gap: 16px;
             margin-bottom: 20px;
         }
 
@@ -61,31 +219,47 @@
 
         label {
             font-weight: 600;
-            margin-bottom: 5px;
-            color: #333;
+            margin-bottom: 4px;
+            font-size: 0.9rem;
+            color: var(--text);
+        }
+
+        .label-hint {
+            font-weight: 400;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            margin-bottom: 4px;
         }
 
         input, select {
-            padding: 12px;
-            border: 2px solid #e0e0e0;
+            padding: 10px 12px;
+            border: 2px solid var(--border);
             border-radius: 8px;
-            font-size: 1rem;
+            font-size: 0.95rem;
+            background: var(--bg);
+            color: var(--text);
             transition: border-color 0.3s;
         }
 
         input:focus, select:focus {
             outline: none;
-            border-color: #667eea;
+            border-color: var(--accent-1);
+        }
+
+        .metric-conversion {
+            font-size: 0.75rem;
+            color: var(--accent-1);
+            margin-top: 2px;
         }
 
         .btn-predict {
             width: 100%;
-            padding: 15px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 14px;
+            background: linear-gradient(135deg, var(--accent-1), var(--accent-2));
             color: white;
             border: none;
             border-radius: 8px;
-            font-size: 1.2rem;
+            font-size: 1.1rem;
             font-weight: 600;
             cursor: pointer;
             transition: transform 0.2s, box-shadow 0.2s;
@@ -93,7 +267,7 @@
 
         .btn-predict:hover {
             transform: translateY(-2px);
-            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+            box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4);
         }
 
         .btn-predict:disabled {
@@ -102,191 +276,452 @@
             transform: none;
         }
 
+        /* ═══════════════════════════════════════════════
+           ACCORDION
+           ═══════════════════════════════════════════════ */
+        .accordion {
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            overflow: hidden;
+            margin-bottom: 16px;
+        }
+
+        .accordion-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 16px;
+            background: var(--bg);
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.9rem;
+            user-select: none;
+            transition: background 0.2s;
+        }
+
+        .accordion-header:hover {
+            background: var(--border);
+        }
+
+        .accordion-arrow {
+            transition: transform 0.3s;
+            font-size: 0.8rem;
+        }
+
+        .accordion.open .accordion-arrow {
+            transform: rotate(180deg);
+        }
+
+        .accordion-body {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s ease;
+        }
+
+        .accordion.open .accordion-body {
+            max-height: 800px;
+        }
+
+        .accordion-content {
+            padding: 16px;
+            font-size: 0.85rem;
+            line-height: 1.7;
+            color: var(--text-secondary);
+        }
+
+        .accordion-content strong {
+            color: var(--text);
+        }
+
+        .accordion-content .field-explain {
+            margin-bottom: 10px;
+            padding-left: 12px;
+            border-left: 3px solid var(--accent-1);
+        }
+
+        .accordion-content .field-explain:last-child {
+            margin-bottom: 0;
+        }
+
+        /* ═══════════════════════════════════════════════
+           RESULT
+           ═══════════════════════════════════════════════ */
         .result {
             display: none;
             text-align: center;
-            padding: 30px;
-            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
-            border-radius: 12px;
+            padding: 24px;
+            background: linear-gradient(135deg, var(--success-1), var(--success-2));
+            border-radius: var(--radius);
             color: white;
-            margin-top: 20px;
+            margin-top: 16px;
         }
 
-        .result.show {
-            display: block;
-            animation: fadeIn 0.5s ease;
-        }
+        .result.show { display: block; animation: fadeIn 0.5s ease; }
 
-        .result h2 {
-            font-size: 3rem;
-            margin-bottom: 10px;
-        }
+        .result h2 { font-size: 2.5rem; margin-bottom: 4px; }
 
-        .result p {
+        .result .price-clp {
             font-size: 1.1rem;
             opacity: 0.9;
+            margin-bottom: 8px;
+        }
+
+        .result .model-detail {
+            font-size: 0.9rem;
+            opacity: 0.8;
         }
 
         .error {
             display: none;
             text-align: center;
-            padding: 20px;
-            background: #ff6b6b;
-            border-radius: 12px;
+            padding: 16px;
+            background: var(--error);
+            border-radius: var(--radius);
             color: white;
-            margin-top: 20px;
+            margin-top: 16px;
         }
 
-        .error.show {
-            display: block;
-        }
+        .error.show { display: block; }
 
         .loading {
             display: none;
             text-align: center;
-            padding: 20px;
+            padding: 16px;
         }
 
-        .loading.show {
-            display: block;
-        }
+        .loading.show { display: block; }
 
         .spinner {
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #667eea;
+            border: 3px solid var(--border);
+            border-top: 3px solid var(--accent-1);
             border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-            margin: 0 auto;
+            width: 36px;
+            height: 36px;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 8px;
         }
 
+        .model-info {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            text-align: center;
+            margin-top: 12px;
+        }
+
+        /* ═══════════════════════════════════════════════
+           FOOTER
+           ═══════════════════════════════════════════════ */
+        .footer {
+            text-align: center;
+            color: var(--text-secondary);
+            margin-top: 30px;
+            font-size: 0.85rem;
+            line-height: 1.8;
+        }
+
+        .footer a {
+            color: var(--accent-1);
+            text-decoration: none;
+        }
+
+        .footer a:hover { text-decoration: underline; }
+
+        /* ═══════════════════════════════════════════════
+           ANIMATIONS
+           ═══════════════════════════════════════════════ */
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
 
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
+            from { opacity: 0; transform: translateY(16px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
-        .model-info {
-            font-size: 0.9rem;
-            color: #666;
-            text-align: center;
-            margin-top: 10px;
-        }
-
-        footer {
-            text-align: center;
-            color: white;
-            margin-top: 30px;
-            opacity: 0.8;
-        }
-
-        footer a {
-            color: white;
+        /* ═══════════════════════════════════════════════
+           RESPONSIVE
+           ═══════════════════════════════════════════════ */
+        @media (max-width: 600px) {
+            .header h1 { font-size: 1.6rem; }
+            .form-grid { grid-template-columns: 1fr; }
+            .metrics-grid { grid-template-columns: repeat(2, 1fr); }
+            .result h2 { font-size: 2rem; }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>🏠 Predictor de Precios</h1>
-            <p>Predice el valor de mercado de propiedades en Ames, Iowa</p>
-        </header>
+    <button class="theme-toggle" id="themeToggle" title="Cambiar tema">🌙</button>
 
+    <div class="container">
+
+        <!-- ═══════════ HEADER ═══════════ -->
+        <div class="header">
+            <h1>Pipeline MLOps — Predictor de Precios</h1>
+            <p class="subtitle">
+                Predicción del valor de mercado de propiedades en Ames, Iowa (EE.UU.)
+                <br>Dataset: 2930 propiedades · Pipeline completo de MLOps
+            </p>
+
+            <div class="tech-stack">
+                <span class="tech-badge">Python 3.12</span>
+                <span class="tech-badge">FastAPI</span>
+                <span class="tech-badge">Scikit-Learn</span>
+                <span class="tech-badge">MLflow</span>
+                <span class="tech-badge">ONNX Runtime</span>
+                <span class="tech-badge">Pandera</span>
+                <span class="tech-badge">Evidently</span>
+                <span class="tech-badge">PostgreSQL</span>
+                <span class="tech-badge">Docker</span>
+                <span class="tech-badge">GitHub Actions</span>
+            </div>
+
+            <div class="header-links">
+                <a href="/docs" target="_blank">📄 Documentación API</a>
+                <a href="/health" target="_blank">💚 Health Check</a>
+                <a href="https://github.com/TU_USUARIO/Entorno-para-soluciones-de-datos-e-IA" target="_blank">🐙 GitHub</a>
+            </div>
+        </div>
+
+        <!-- ═══════════ MODEL METRICS ═══════════ -->
         <div class="card">
+            <div class="card-title">📊 Modelo en Producción</div>
+            <div class="metrics-grid" id="metricsGrid">
+                <div class="metric-item">
+                    <div class="metric-value" id="metricModelo">—</div>
+                    <div class="metric-label">Modelo</div>
+                </div>
+                <div class="metric-item">
+                    <div class="metric-value" id="metricR2">—</div>
+                    <div class="metric-label">R² Score</div>
+                </div>
+                <div class="metric-item">
+                    <div class="metric-value" id="metricMAE">—</div>
+                    <div class="metric-label">MAE (error promedio)</div>
+                </div>
+                <div class="metric-item">
+                    <div class="metric-value" id="metricRuntime">—</div>
+                    <div class="metric-label">Runtime</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ═══════════ PIPELINE ═══════════ -->
+        <div class="card">
+            <div class="card-title">⚙️ Pipeline MLOps</div>
+            <div class="pipeline-steps">
+                <span class="pipeline-step">CSV</span>
+                <span class="pipeline-arrow">→</span>
+                <span class="pipeline-step">PostgreSQL</span>
+                <span class="pipeline-arrow">→</span>
+                <span class="pipeline-step">Validación (Pandera)</span>
+                <span class="pipeline-arrow">→</span>
+                <span class="pipeline-step">Feature Engineering</span>
+                <span class="pipeline-arrow">→</span>
+                <span class="pipeline-step">MLflow Tracking</span>
+                <span class="pipeline-arrow">→</span>
+                <span class="pipeline-step">ONNX Export</span>
+                <span class="pipeline-arrow">→</span>
+                <span class="pipeline-step">FastAPI</span>
+                <span class="pipeline-arrow">→</span>
+                <span class="pipeline-step">Drift Detection</span>
+            </div>
+        </div>
+
+        <!-- ═══════════ PREDICTION FORM ═══════════ -->
+        <div class="card">
+            <div class="card-title">🔮 Predecir Precio de Propiedad</div>
+            <p style="font-size:0.85rem; color:var(--text-secondary); margin-bottom:16px;">
+                Los datos corresponden al mercado inmobiliario de Ames, Iowa (EE.UU.).
+                Las áreas están en pies cuadrados (1 pie² = 0.093 m²).
+            </p>
+
+            <!-- Accordion: Guía de campos -->
+            <div class="accordion" id="guideAccordion">
+                <div class="accordion-header" onclick="toggleAccordion('guideAccordion')">
+                    <span>📖 ¿Qué significa cada campo?</span>
+                    <span class="accordion-arrow">▼</span>
+                </div>
+                <div class="accordion-body">
+                    <div class="accordion-content">
+                        <div class="field-explain">
+                            <strong>Calidad General (1-10)</strong><br>
+                            Qué tan buena es la construcción: materiales, acabados, diseño.
+                            Es el factor #1 que afecta el precio. Una casa con calidad 10
+                            puede valer 3-4 veces más que una con calidad 4.
+                        </div>
+                        <div class="field-explain">
+                            <strong>Superficie Habitable</strong><br>
+                            Cuántos metros/pies cuadrados tiene la casa sobre el nivel del suelo.
+                            No incluye sótano ni garage. Es el segundo factor más importante.
+                            <br><em>Ejemplo: 1500 pies² ≈ 139 m² (casa mediana chilena ~120-150 m²)</em>
+                        </div>
+                        <div class="field-explain">
+                            <strong>Sótano</strong><br>
+                            Área del sótano terminado. Si la casa no tiene sótano, poner 0.
+                            En Ames, Iowa los sótanos son comunes por el clima (tornados).
+                            <br><em>En Chile no es habitual, pero en el dataset es un factor relevante.</em>
+                        </div>
+                        <div class="field-explain">
+                            <strong>Baños Completos</strong><br>
+                            Cantidad de baños con lavamanos, inodoro Y ducha/tina.
+                            Un baño a medio terminar (solo inodoro) no cuenta como "completo".
+                        </div>
+                        <div class="field-explain">
+                            <strong>Habitaciones</strong><br>
+                            Dormitorios sobre el nivel del suelo. No cuenta habitaciones en sótano.
+                            Más habitaciones generalmente = más valor, pero hay un punto de retorno.
+                        </div>
+                        <div class="field-explain">
+                            <strong>Garage (capacidad + superficie)</strong><br>
+                            Cuántos autos caben y cuántos pies² mide el garage.
+                            Un garage de 2 autos típico mide ~450-550 pies² (~42-51 m²).
+                        </div>
+                        <div class="field-explain">
+                            <strong>Frente del Lote</strong><br>
+                            Qué tan ancho es el terreno desde la calle (en pies).
+                            Lotes más anchos suelen ser más caros por la ubicación.
+                            <br><em>60 pies ≈ 18 metros (ancho típico de parcela chilena)</em>
+                        </div>
+                        <div class="field-explain">
+                            <strong>Barrio</strong><br>
+                            Zona de Ames, Iowa. Cada barrio tiene características distintas:
+                            algunos son universitarios (College Creek), otros de lujo (Northridge),
+                            otros más económicos (Meadow Village). El barrio afecta el precio
+                            tanto como la calidad de la casa.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Nota sobre unidades -->
+            <div class="accordion" id="unitsAccordion">
+                <div class="accordion-header" onclick="toggleAccordion('unitsAccordion')">
+                    <span>📏 Nota sobre unidades de medida</span>
+                    <span class="accordion-arrow">▼</span>
+                </div>
+                <div class="accordion-body">
+                    <div class="accordion-content">
+                        <p>
+                            El dataset original (<strong>Ames Housing</strong>) es de EE.UU., por lo que
+                            todas las medidas están en <strong>unidades imperiales</strong>:
+                        </p>
+                        <p style="margin-top:8px;">
+                            • <strong>Área:</strong> pies cuadrados (ft²). 1 ft² = 0.093 m²<br>
+                            • <strong>Distancia:</strong> pies lineales (ft). 1 ft = 0.305 m<br>
+                            • <strong>Precio:</strong> dólares estadounidenses (USD)
+                        </p>
+                        <p style="margin-top:8px;">
+                            Debajo de cada campo numérico verás la <strong>conversión automática a métrico</strong>
+                            para referencia. Pero el modelo recibe los valores en imperiales (como fue entrenado).
+                        </p>
+                    </div>
+                </div>
+            </div>
+
             <form id="predictForm">
                 <div class="form-grid">
                     <div class="form-group">
-                        <label for="overall_qual">Calidad (1-10)</label>
-                        <input type="number" id="overall_qual" name="overall_qual" min="1" max="10" value="7" required>
+                        <label for="overall_qual">Calidad General</label>
+                        <span class="label-hint">Calidad de construcción y materiales (1=Muy mala, 10=Excelente)</span>
+                        <input type="number" id="overall_qual" min="1" max="10" value="7" required>
                     </div>
 
                     <div class="form-group">
-                        <label for="gr_liv_area">Superficie (pies²)</label>
-                        <input type="number" id="gr_liv_area" name="gr_liv_area" min="1" value="1500" required>
+                        <label for="gr_liv_area">Superficie Habitable</label>
+                        <span class="label-hint">Área habitable sobre tierra</span>
+                        <input type="number" id="gr_liv_area" min="1" value="1500" required>
+                        <span class="metric-conversion" id="convLivArea">≈ 139.4 m²</span>
                     </div>
 
                     <div class="form-group">
-                        <label for="total_bsmt_sf">Sótano (pies²)</label>
-                        <input type="number" id="total_bsmt_sf" name="total_bsmt_sf" min="0" value="800">
+                        <label for="total_bsmt_sf">Sótano</label>
+                        <span class="label-hint">Superficie total del sótano</span>
+                        <input type="number" id="total_bsmt_sf" min="0" value="800">
+                        <span class="metric-conversion" id="convBsmt">≈ 74.3 m²</span>
                     </div>
 
                     <div class="form-group">
-                        <label for="full_bath">Baños completos</label>
-                        <input type="number" id="full_bath" name="full_bath" min="0" value="2">
+                        <label for="full_bath">Baños Completos</label>
+                        <span class="label-hint">Baños con lavamanos, inodoro y ducha/tina</span>
+                        <input type="number" id="full_bath" min="0" value="2">
                     </div>
 
                     <div class="form-group">
                         <label for="bedroom_abvgr">Habitaciones</label>
-                        <input type="number" id="bedroom_abvgr" name="bedroom_abvgr" min="0" value="3">
+                        <span class="label-hint">Dormitorios sobre el nivel del suelo</span>
+                        <input type="number" id="bedroom_abvgr" min="0" value="3">
                     </div>
 
                     <div class="form-group">
                         <label for="garage_cars">Capacidad Garage</label>
-                        <input type="number" id="garage_cars" name="garage_cars" min="0" value="2">
+                        <span class="label-hint">Cantidad de autos que caben</span>
+                        <input type="number" id="garage_cars" min="0" value="2">
                     </div>
 
                     <div class="form-group">
                         <label for="garage_area">Superficie Garage</label>
-                        <input type="number" id="garage_area" name="garage_area" min="0" value="500">
+                        <span class="label-hint">Área del garage en pies cuadrados</span>
+                        <input type="number" id="garage_area" min="0" value="500">
+                        <span class="metric-conversion" id="convGarage">≈ 46.5 m²</span>
                     </div>
 
                     <div class="form-group">
                         <label for="lot_frontage">Frente del Lote</label>
-                        <input type="number" id="lot_frontage" name="lot_frontage" min="0" value="60">
+                        <span class="label-hint">Distancia de calle al lote (pies lineales)</span>
+                        <input type="number" id="lot_frontage" min="0" value="60">
+                        <span class="metric-conversion" id="convFrontage">≈ 18.3 m</span>
                     </div>
 
                     <div class="form-group">
                         <label for="neighborhood">Barrio</label>
-                        <select id="neighborhood" name="neighborhood" required>
-                            <option value="NAmes">North Ames</option>
-                            <option value="CollgCr">College Creek</option>
-                            <option value="OldTown">Old Town</option>
-                            <option value="Edwards">Edwards</option>
-                            <option value="Somerst">Somerset</option>
-                            <option value="Gilbert">Gilbert</option>
-                            <option value="NridgHt">Northridge Heights</option>
-                            <option value="Sawyer">Sawyer</option>
-                            <option value="NWAmes">Northwest Ames</option>
-                            <option value="SawyerW">Sawyer West</option>
-                            <option value="BrkSide">Brookside</option>
-                            <option value="Crawfor">Crawford</option>
-                            <option value="Mitchel">Mitchell</option>
-                            <option value="NoRidge">Northridge</option>
-                            <option value="Timber">Timberland</option>
-                            <option value="IDOTRR">Iowa DOT and Rail Road</option>
-                            <option value="ClearCr">Clear Creek</option>
-                            <option value="StoneBr">Stone Brook</option>
-                            <option value="SWISU">South & West of Iowa State University</option>
-                            <option value="Blueste">Bluestem</option>
-                            <option value="MeadowV">Meadow Village</option>
-                            <option value="BrDale">Briardale</option>
-                            <option value="Veenker">Veenker</option>
+                        <span class="label-hint">Zona de Ames, Iowa (EE.UU.)</span>
+                        <select id="neighborhood" required>
+                            <option value="NAmes">North Ames — Residencial popular</option>
+                            <option value="CollgCr">College Creek — Cerca de la universidad</option>
+                            <option value="OldTown">Old Town — Centro hist&oacute;rico</option>
+                            <option value="Edwards">Edwards — Zona en desarrollo</option>
+                            <option value="Somerst">Somerset — Residencial nuevo</option>
+                            <option value="Gilbert">Gilbert — Familiar</option>
+                            <option value="NridgHt">Northridge Heights — Premium</option>
+                            <option value="Sawyer">Sawyer — Económico</option>
+                            <option value="NWAmes">Northwest Ames — Suburbano</option>
+                            <option value="SawyerW">Sawyer West — Nuevo desarrollo</option>
+                            <option value="BrkSide">Brookside — Clase trabajadora</option>
+                            <option value="Crawfor">Crawford — Tradicional</option>
+                            <option value="Mitchel">Mitchell — Sur de la ciudad</option>
+                            <option value="NoRidge">Northridge — Lujo</option>
+                            <option value="Timber">Timberland — Zona verde</option>
+                            <option value="IDOTRR">Iowa DOT &amp; Rail Road — Cerca del ferrocarril</option>
+                            <option value="ClearCr">Clear Creek — Rural</option>
+                            <option value="StoneBr">Stone Brook — Alta gama</option>
+                            <option value="SWISU">Cerca de Iowa State University</option>
+                            <option value="Blueste">Bluestem — Peque&ntilde;o</option>
+                            <option value="MeadowV">Meadow Village — Bajo costo</option>
+                            <option value="BrDale">Briardale — Compacto</option>
+                            <option value="Veenker">Veenker — Cerca del golf</option>
                             <option value="NPkVill">Northpark Villa</option>
-                            <option value="Greens">Greens</option>
-                            <option value="GrnHill">Green Hills</option>
-                            <option value="Landmrk">Landmark</option>
+                            <option value="Greens">Greens — Residencial</option>
+                            <option value="GrnHill">Green Hills — Exclusivo</option>
+                            <option value="Landmrk">Landmark — Hist&oacute;rico</option>
                         </select>
                     </div>
                 </div>
 
                 <button type="submit" class="btn-predict" id="btnPredict">
-                    🔮 Predecir Precio
+                    Predecir Precio
                 </button>
             </form>
 
             <div class="loading" id="loading">
                 <div class="spinner"></div>
-                <p>Calculando predicción...</p>
+                <p>Calculando predicci&oacute;n...</p>
             </div>
 
             <div class="result" id="result">
                 <h2 id="precioFormateado"></h2>
-                <p id="modeloInfo"></p>
+                <p class="price-clp" id="precioCLP"></p>
+                <p class="model-detail" id="modeloInfo"></p>
             </div>
 
             <div class="error" id="error">
@@ -296,35 +731,113 @@
             <p class="model-info" id="modelInfoText"></p>
         </div>
 
-        <footer>
-            <p>Proyecto de Portafolio — Gestión de Datos para IA</p>
-            <p>Modelo: Random Forest | R² = 96.5%</p>
-        </footer>
+        <!-- ═══════════ FOOTER ═══════════ -->
+        <div class="footer">
+            <p>Proyecto de Portafolio — Gestión de Datos para IA (ITY1101) · DuocUC</p>
+            <p>
+                <a href="/docs">API Docs</a> ·
+                <a href="/health">Health</a> ·
+                <a href="https://github.com/TU_USUARIO/Entorno-para-soluciones-de-datos-e-IA">GitHub</a>
+            </p>
+            <p>Stack: FastAPI · Scikit-Learn · MLflow · ONNX · Pandera · Docker</p>
+        </div>
     </div>
 
     <script>
-        // Determinar la URL base de la API
-        // En Render, la API está en el mismo dominio
-        // En desarrollo local, está en localhost:8000
-        const API_BASE = window.location.hostname === 'localhost' 
-            ? 'http://localhost:8000' 
+        /* ═══════════════════════════════════════════════
+           ACCORDION
+           ═══════════════════════════════════════════════ */
+        function toggleAccordion(id) {
+            document.getElementById(id).classList.toggle('open');
+        }
+
+        /* ═══════════════════════════════════════════════
+           CONFIG
+           ═══════════════════════════════════════════════ */
+        const API_BASE = window.location.hostname === 'localhost'
+            ? 'http://localhost:8000'
             : '';
 
-        // Cargar info del modelo al iniciar
+        const CLP_RATE = 950; // USD → CLP (aproximado)
+
+        /* ═══════════════════════════════════════════════
+           THEME TOGGLE
+           ═══════════════════════════════════════════════ */
+        const toggle = document.getElementById('themeToggle');
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+        toggle.textContent = savedTheme === 'dark' ? '☀️' : '🌙';
+
+        toggle.addEventListener('click', () => {
+            const current = document.documentElement.getAttribute('data-theme');
+            const next = current === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', next);
+            localStorage.setItem('theme', next);
+            toggle.textContent = next === 'dark' ? '☀️' : '🌙';
+        });
+
+        /* ═══════════════════════════════════════════════
+           METRIC CONVERSIONS (live)
+           ═══════════════════════════════════════════════ */
+        const SQFT_TO_SQM = 0.0929;
+        const FT_TO_M = 0.3048;
+
+        function updateConversions() {
+            const livArea = parseFloat(document.getElementById('gr_liv_area').value) || 0;
+            const bsmt = parseFloat(document.getElementById('total_bsmt_sf').value) || 0;
+            const garage = parseFloat(document.getElementById('garage_area').value) || 0;
+            const frontage = parseFloat(document.getElementById('lot_frontage').value) || 0;
+
+            document.getElementById('convLivArea').textContent =
+                livArea ? `≈ ${(livArea * SQFT_TO_SQM).toFixed(1)} m²` : '';
+            document.getElementById('convBsmt').textContent =
+                bsmt ? `≈ ${(bsmt * SQFT_TO_SQM).toFixed(1)} m²` : '';
+            document.getElementById('convGarage').textContent =
+                garage ? `≈ ${(garage * SQFT_TO_SQM).toFixed(1)} m²` : '';
+            document.getElementById('convFrontage').textContent =
+                frontage ? `≈ ${(frontage * FT_TO_M).toFixed(1)} m` : '';
+        }
+
+        document.querySelectorAll('input[type="number"]').forEach(el => {
+            el.addEventListener('input', updateConversions);
+        });
+        updateConversions();
+
+        /* ═══════════════════════════════════════════════
+           LOAD MODEL INFO
+           ═══════════════════════════════════════════════ */
         async function loadModelInfo() {
             try {
-                const response = await fetch(`${API_BASE}/model/info`);
-                if (response.ok) {
-                    const data = await response.json();
-                    document.getElementById('modelInfoText').textContent = 
-                        `Modelo: ${data.modelo} | R² = ${(data.r2 * 100).toFixed(1)}% | MAE = $${data.mae.toLocaleString()}`;
+                const [infoRes, healthRes] = await Promise.all([
+                    fetch(`${API_BASE}/model/info`),
+                    fetch(`${API_BASE}/health`)
+                ]);
+
+                if (infoRes.ok && healthRes.ok) {
+                    const info = await infoRes.json();
+                    const health = await healthRes.json();
+
+                    // Metrics card
+                    document.getElementById('metricModelo').textContent = info.modelo || '—';
+                    document.getElementById('metricR2').textContent =
+                        info.r2 ? `${(info.r2 * 100).toFixed(1)}%` : '—';
+                    document.getElementById('metricMAE').textContent =
+                        info.mae ? `$${Math.round(info.mae).toLocaleString()}` : '—';
+                    document.getElementById('metricRuntime').textContent =
+                        health.runtime_type || '—';
+
+                    // Footer info text
+                    document.getElementById('modelInfoText').textContent =
+                        `${info.modelo} · R² = ${(info.r2 * 100).toFixed(1)}% · MAE = $${Math.round(info.mae).toLocaleString()} · Runtime: ${health.runtime_type}`;
                 }
-            } catch (error) {
-                console.log('No se pudo cargar info del modelo');
+            } catch (e) {
+                console.log('No se pudo cargar info del modelo:', e);
             }
         }
 
-        // Manejar el formulario
+        /* ═══════════════════════════════════════════════
+           PREDICT
+           ═══════════════════════════════════════════════ */
         document.getElementById('predictForm').addEventListener('submit', async (e) => {
             e.preventDefault();
 
@@ -333,13 +846,11 @@
             const result = document.getElementById('result');
             const error = document.getElementById('error');
 
-            // Reset UI
             btn.disabled = true;
             loading.classList.add('show');
             result.classList.remove('show');
             error.classList.remove('show');
 
-            // Recopilar datos del formulario
             const formData = {
                 overall_qual: parseInt(document.getElementById('overall_qual').value),
                 gr_liv_area: parseInt(document.getElementById('gr_liv_area').value),
@@ -355,9 +866,7 @@
             try {
                 const response = await fetch(`${API_BASE}/predict`, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(formData)
                 });
 
@@ -368,10 +877,18 @@
 
                 const data = await response.json();
 
-                // Mostrar resultado
+                // USD price
                 document.getElementById('precioFormateado').textContent = data.precio_formateado;
-                document.getElementById('modeloInfo').textContent = 
+
+                // CLP conversion
+                const precioCLP = Math.round(data.precio_predicho * CLP_RATE);
+                document.getElementById('precioCLP').textContent =
+                    `≈ $${precioCLP.toLocaleString('es-CL')} CLP`;
+
+                // Model info
+                document.getElementById('modeloInfo').textContent =
                     `${data.modelo_usado} — Confianza: ${(data.confianza_r2 * 100).toFixed(1)}%`;
+
                 result.classList.add('show');
 
             } catch (err) {
@@ -383,7 +900,9 @@
             }
         });
 
-        // Cargar info al iniciar
+        /* ═══════════════════════════════════════════════
+           INIT
+           ═══════════════════════════════════════════════ */
         loadModelInfo();
     </script>
 </body>

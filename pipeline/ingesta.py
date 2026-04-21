@@ -113,7 +113,8 @@ def cargar_a_postgres(df: pd.DataFrame, engine) -> None:
 
     # Recreate view
     with engine.connect() as conn:
-        conn.execute(text("""
+        conn.execute(
+            text("""
             CREATE OR REPLACE VIEW vw_properties_clean AS
             SELECT
                 order_id, neighborhood, overall_qual, year_built, gr_liv_area,
@@ -125,7 +126,8 @@ def cargar_a_postgres(df: pd.DataFrame, engine) -> None:
                 saleprice
             FROM properties_raw
             WHERE saleprice > 0 AND gr_liv_area < 4000 AND saleprice < 500000
-        """))
+        """)
+        )
         conn.commit()
 
 
