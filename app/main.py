@@ -11,13 +11,15 @@ Uso:
 import time
 from contextlib import asynccontextmanager
 from pathlib import Path
+from typing import Any
 from uuid import uuid4
 
 import pandas as pd
-from fastapi import FastAPI, HTTPException
-from fastapi.responses import FileResponse
+from fastapi import Body, FastAPI, HTTPException, Request
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from app.config import settings
 from app.dependencies import ModelManager
@@ -77,9 +79,31 @@ async def lifespan(app: FastAPI):
 # 3. APP FASTAPI
 # ────────────────────────────────────────────────────
 app = FastAPI(
-    title="🏠 API Predicción Precios Inmobiliarios",
-    description="Predice el valor de mercado de propiedades en Ames, Iowa usando Random Forest",
+    title="API Predicción Precios Inmobiliarios",
+    summary="Servicio REST para estimar precios de propiedades en Ames, Iowa",
+    description=(
+        "API para inferencia de precios inmobiliarios con FastAPI. "
+        "Incluye predicción, health check y metadata del modelo activo."
+    ),
     version="1.0.0",
+    contact={
+        "name": "Ricardo Saavedra",
+        "url": "https://github.com/risaavedraf/Entorno-para-soluciones-de-datos-e-IA",
+    },
+    license_info={"name": "MIT", "url": "https://opensource.org/licenses/MIT"},
+    openapi_tags=[
+        {"name": "Meta", "description": "Información general del servicio"},
+        {"name": "Monitoring", "description": "Estado y salud operativa de la API"},
+        {"name": "Model", "description": "Información del modelo desplegado"},
+        {"name": "Predictions", "description": "Predicción de precios inmobiliarios"},
+    ],
+    servers=[
+        {"url": "http://localhost:8000", "description": "Local"},
+        {
+            "url": "https://entorno-para-soluciones-de-datos-e-ia.onrender.com",
+            "description": "Producción",
+        },
+    ],
     lifespan=lifespan,
 )
 
@@ -134,10 +158,106 @@ class PrediccionOutput(BaseModel):
     runtime_type: str = Field(..., description="Runtime activo (onnx/sklearn)")
 
 
+class ErrorResponse(BaseModel):
+    """Contrato estándar de error para respuestas no exitosas."""
+
+    detail: str = Field(..., description="Descripción legible del error")
+
+
+class ValidationErrorResponse(BaseModel):
+    """Respuesta estandarizada para errores de validación de entrada."""
+
+    detail: str = Field(..., description="Mensaje principal del error")
+    errors: list[dict[str, Any]] = Field(..., description="Lista detallada de errores de validación")
+
+
+class ApiEndpoints(BaseModel):
+    """Catálogo de rutas públicas de la API."""
+
+    predict: str = Field(..., description="Ruta de predicción")
+    health: str = Field(..., description="Ruta de health check")
+    info: str = Field(..., description="Ruta de metadata del modelo")
+    docs: str = Field(..., description="Ruta de documentación Swagger")
+
+
+class ApiInfoResponse(BaseModel):
+    """Información general de la API."""
+
+    mensaje: str = Field(..., description="Nombre o descripción del servicio")
+    estado: str = Field(..., description="Estado general reportado por la API")
+    modelo: str = Field(..., description="Versión o nombre del modelo activo")
+    endpoints: ApiEndpoints = Field(..., description="Listado de endpoints disponibles")
+
+
+class HealthResponse(BaseModel):
+    """Payload de salud del servicio."""
+
+    status: str = Field(..., description="Estado del servicio: ok o degraded")
+    modelo_cargado: bool = Field(..., description="Indica si hay modelo listo para inferencia")
+    model_loaded: bool = Field(..., description="Alias de compatibilidad para clients existentes")
+    model_version: str = Field(..., description="Versión del modelo cargado")
+    runtime_type: str = Field(..., description="Runtime activo (onnx/sklearn)")
+
+
+class ModelInfoResponse(BaseModel):
+    """Metadata del modelo. Permite campos extra para compatibilidad."""
+
+    model_config = ConfigDict(extra="allow")
+
+    runtime_type: str = Field(..., description="Runtime activo (onnx/sklearn)")
+    model_version: str = Field(..., description="Versión del modelo cargado")
+
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    logger = get_logger()
+    if logger:
+        logger.warning(
+            "request_validation_failed",
+            path=str(request.url.path),
+            method=request.method,
+            errors=exc.errors(),
+        )
+    return JSONResponse(
+        status_code=422,
+        content={
+            "detail": "Error de validación en el request",
+            "errors": exc.errors(),
+        },
+    )
+
+
+@app.exception_handler(HTTPException)
+async def http_exception_handler(request: Request, exc: HTTPException):
+    logger = get_logger()
+    if logger:
+        logger.warning(
+            "http_exception",
+            path=str(request.url.path),
+            method=request.method,
+            status_code=exc.status_code,
+            detail=str(exc.detail),
+        )
+    return JSONResponse(status_code=exc.status_code, content={"detail": str(exc.detail)})
+
+
+@app.exception_handler(Exception)
+async def unhandled_exception_handler(request: Request, exc: Exception):
+    logger = get_logger()
+    if logger:
+        logger.exception(
+            "unhandled_exception",
+            path=str(request.url.path),
+            method=request.method,
+            error=str(exc),
+        )
+    return JSONResponse(status_code=500, content={"detail": "Error interno del servidor"})
+
+
 # ────────────────────────────────────────────────────
 # 5. ENDPOINTS
 # ────────────────────────────────────────────────────
-@app.get("/")
+@app.get("/", include_in_schema=False)
 def read_root():
     """Sirve el frontend HTML."""
     index_path = STATIC_DIR / "index.html"
@@ -147,7 +267,14 @@ def read_root():
     return {"mensaje": "API de Predicción Inmobiliaria", "estado": "operativo"}
 
 
-@app.get("/api")
+@app.get(
+    "/api",
+    tags=["Meta"],
+    summary="Información general de la API",
+    description="Devuelve estado, versión del modelo y catálogo de endpoints disponibles.",
+    response_model=ApiInfoResponse,
+    response_description="Información general del servicio",
+)
 def api_info():
     """Devuelve info de la API en JSON."""
     manager = _get_model_manager()
@@ -164,7 +291,14 @@ def api_info():
     }
 
 
-@app.get("/health")
+@app.get(
+    "/health",
+    tags=["Monitoring"],
+    summary="Health check del servicio",
+    description="Indica disponibilidad de la API y estado de carga del modelo.",
+    response_model=HealthResponse,
+    response_description="Estado de salud del servicio",
+)
 def health_check():
     """Health check para Render y monitoreo."""
     manager = _get_model_manager()
@@ -178,7 +312,20 @@ def health_check():
     }
 
 
-@app.get("/model/info")
+@app.get(
+    "/model/info",
+    tags=["Model"],
+    summary="Metadata del modelo activo",
+    description="Retorna métricas y metadatos del modelo actualmente desplegado.",
+    response_model=ModelInfoResponse,
+    response_description="Metadata del modelo",
+    responses={
+        404: {
+            "description": "Modelo o metadata no encontrado",
+            "model": ErrorResponse,
+        }
+    },
+)
 def model_info():
     """Devuelve información del modelo entrenado."""
     manager = _get_model_manager()
@@ -195,8 +342,44 @@ def model_info():
     return metadata
 
 
-@app.post("/predict", response_model=PrediccionOutput)
-def predict(propiedad: PropiedadInput):
+@app.post(
+    "/predict",
+    tags=["Predictions"],
+    summary="Predecir precio de una propiedad",
+    description=(
+        "Recibe atributos de una propiedad residencial y devuelve un precio estimado en USD, "
+        "junto a metadatos del modelo en uso."
+    ),
+    response_model=PrediccionOutput,
+    response_description="Predicción generada correctamente",
+    responses={
+        400: {"description": "Error de datos o features inválidas", "model": ErrorResponse},
+        422: {"description": "Error de validación de entrada", "model": ValidationErrorResponse},
+        503: {"description": "Modelo no cargado", "model": ErrorResponse},
+        500: {"description": "Error interno de predicción", "model": ErrorResponse},
+    },
+)
+def predict(
+    propiedad: PropiedadInput = Body(
+        ...,
+        examples={
+            "caso_estandar": {
+                "summary": "Propiedad residencial estándar",
+                "value": {
+                    "overall_qual": 7,
+                    "gr_liv_area": 1500,
+                    "total_bsmt_sf": 800,
+                    "full_bath": 2,
+                    "bedroom_abvgr": 3,
+                    "garage_cars": 2,
+                    "garage_area": 500,
+                    "lot_frontage": 60,
+                    "neighborhood": "NAmes",
+                },
+            }
+        },
+    )
+):
     """
     Predice el precio de una propiedad.
 
@@ -271,6 +454,19 @@ def predict(propiedad: PropiedadInput):
             runtime_type=manager.runtime_type,
         )
 
+    except ValueError as e:
+        logger = get_logger()
+        if logger:
+            logger.warning("prediction_bad_request", error=str(e))
+        raise HTTPException(status_code=400, detail="Datos de entrada inválidos para predecir") from e
+    except RuntimeError as e:
+        logger = get_logger()
+        if logger:
+            logger.warning("prediction_model_unavailable", error=str(e))
+        raise HTTPException(
+            status_code=503,
+            detail="Modelo no disponible temporalmente. Reentrená o reiniciá el servicio.",
+        ) from e
     except Exception as e:
         logger = get_logger()
         if logger:

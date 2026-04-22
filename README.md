@@ -1,5 +1,22 @@
 # Pipeline MLOps — Predicción de Precios Inmobiliarios
 
+## TL;DR
+
+Proyecto MLOps end-to-end para predicción de precios inmobiliarios, evolucionado desde un pipeline académico básico a una solución más cercana a producción.
+
+### Lo más importante en 30 segundos
+- Pipeline modular: `ingest -> validate -> clean -> train -> convert -> serve -> monitor`
+- Validación de datos con Pandera + quality gates
+- Tracking de experimentos con MLflow
+- Serving optimizado con ONNX + fallback a sklearn
+- Detección de drift con PSI/KS (Evidently)
+- CI/CD con tests, lint, model gates y deploy automático
+
+### Enlaces rápidos
+- **Repo:** [GitHub](https://github.com/risaavedraf/Entorno-para-soluciones-de-datos-e-IA)
+- **Demo API:** [Render](https://entorno-para-soluciones-de-datos-e-ia.onrender.com/)
+- **Swagger:** `/docs` en la URL del deploy
+
 [![CI Pipeline](https://github.com/risaavedraf/Entorno-para-soluciones-de-datos-e-IA/actions/workflows/ci.yml/badge.svg)](https://github.com/risaavedraf/Entorno-para-soluciones-de-datos-e-IA/actions/workflows/ci.yml)
 
 **Asignatura:** Gestión de Datos para IA (ITY1101) — DuocUC  
