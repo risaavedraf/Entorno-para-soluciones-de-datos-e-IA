@@ -18,7 +18,7 @@ def _read_tabular(path: Path):
     if suffix in {".parquet", ".pq"}:
         return pd.read_parquet(path)
 
-    raise ValueError(f"Formato no soportado: {path}. Usá .csv o .parquet")
+    raise ValueError(f"Formato no soportado: {path}. Usa .csv o .parquet")
 
 
 def _run_drift_step(reference_path: Path, current_path: Path, report_dir: Path | None) -> None:
@@ -90,12 +90,10 @@ def main() -> None:
             )
         elif args.step == "drift":
             raise SystemExit(
-                "Para ejecutar drift debés pasar --reference y --current (csv/parquet)."
+                "Para ejecutar drift debes pasar --reference y --current (csv/parquet)."
             )
         else:
-            print(
-                "[drift] omitido en full: pasá --reference y --current para activarlo."
-            )
+            print("[drift] omitido en full: debes pasar --reference y --current para activarlo.")
     if args.step == "validate":
         # Validation is integrated in limpieza.run via Pandera
         limpieza.run()

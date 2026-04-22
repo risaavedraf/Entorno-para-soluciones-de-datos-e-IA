@@ -168,7 +168,9 @@ class ValidationErrorResponse(BaseModel):
     """Respuesta estandarizada para errores de validación de entrada."""
 
     detail: str = Field(..., description="Mensaje principal del error")
-    errors: list[dict[str, Any]] = Field(..., description="Lista detallada de errores de validación")
+    errors: list[dict[str, Any]] = Field(
+        ..., description="Lista detallada de errores de validación"
+    )
 
 
 class ApiEndpoints(BaseModel):
@@ -332,7 +334,7 @@ def model_info():
     metadata_path = settings.MODELS_DIR / "metadata.json"
     if not metadata_path.exists():
         raise HTTPException(
-            status_code=404, detail="Modelo no encontrado. Ejecutá: python scripts/entrenamiento.py"
+            status_code=404, detail="Modelo no encontrado. Ejecuta: python scripts/entrenamiento.py"
         )
     import json
 
@@ -378,7 +380,7 @@ def predict(
                 },
             }
         },
-    )
+    ),
 ):
     """
     Predice el precio de una propiedad.
@@ -388,7 +390,7 @@ def predict(
     manager = _get_model_manager()
     if not manager.is_loaded():
         raise HTTPException(
-            status_code=503, detail="Modelo no cargado. Ejecutá: python scripts/entrenamiento.py"
+            status_code=503, detail="Modelo no cargado. Ejecuta: python scripts/entrenamiento.py"
         )
 
     try:
@@ -458,14 +460,16 @@ def predict(
         logger = get_logger()
         if logger:
             logger.warning("prediction_bad_request", error=str(e))
-        raise HTTPException(status_code=400, detail="Datos de entrada inválidos para predecir") from e
+        raise HTTPException(
+            status_code=400, detail="Datos de entrada inválidos para predecir"
+        ) from e
     except RuntimeError as e:
         logger = get_logger()
         if logger:
             logger.warning("prediction_model_unavailable", error=str(e))
         raise HTTPException(
             status_code=503,
-            detail="Modelo no disponible temporalmente. Reentrená o reiniciá el servicio.",
+            detail="Modelo no disponible temporalmente. Reentrena o reinicia el servicio.",
         ) from e
     except Exception as e:
         logger = get_logger()
