@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
+
 def _read_tabular(path: Path):
     import pandas as pd
 
@@ -30,8 +31,8 @@ def _run_drift_step(reference_path: Path, current_path: Path, report_dir: Path |
     output_path = drift.save_drift_report(report, output_dir=report_dir)
 
     print(
-        "[drift] dataset_drift=%s drift_share=%.4f report=%s"
-        % (report.dataset_drift, report.drift_share, output_path)
+        f"[drift] dataset_drift={report.dataset_drift} "
+        f"drift_share={report.drift_share:.4f} report={output_path}"
     )
 
 
